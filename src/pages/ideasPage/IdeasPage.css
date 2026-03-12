@@ -1,0 +1,86 @@
+.ideas-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+.ideas-search-header {
+    padding: 6px 20px 16px;
+    flex-shrink: 0;
+    animation: fadeSlideUp 0.35s ease both;
+}
+
+.ideas-page-title {
+    font-family: 'Cormorant', serif;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 14px;
+    line-height: 1;
+}
+.ideas-page-title span { color: var(--burgundy); }
+
+.search-bar-wrap  { display: flex; gap: 10px; align-items: center; }
+.search-input-box { flex: 1; position: relative; }
+.search-input-box svg {
+    position: absolute; left: 14px; top: 50%;
+    transform: translateY(-50%);
+    width: 17px; height: 17px;
+    stroke: var(--text-muted); fill: none; stroke-width: 2;
+}
+.search-input {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px 13px 42px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--black);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus         { border-color: var(--burgundy); }
+
+.filter-btn {
+    width: 46px; height: 46px;
+    background: var(--black);
+    border: none; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+}
+.filter-btn svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; }
+
+.ideas-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 0 20px 8px;
+}
+.ideas-scroll::-webkit-scrollbar { display: none; }
+
+/* CATEGORIES GRID */
+.categories-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.category-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: border-color 0.15s, transform 0.15s;
+    animation: fadeSlideUp 0.4s ease both;
+}
+.category-card:active {
+    border-color: var(--burgundy);
+    transform: scale(0.98);
+}
+
+.category-emoji { font-size: 36px; margin-bottom: 10px; line-height: 1; }
+.category-label { font-family: 'Cormorant', serif; font-size: 18px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
+.category-count { font-size: 11px; color: var(--text-muted); }

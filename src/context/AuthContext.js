@@ -4,29 +4,38 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const id = localStorage.getItem('userId');
-        const phone = localStorage.getItem('phoneNumber');
-        return id ? { id, phone } : null;
+        try {
+            const stored = localStorage.getItem('user');
+            return stored ? JSON.parse(stored) : null;
+        } catch {
+            return null;
+        }
     });
 
-    const login = (userData) => {
-        localStorage.setItem('accessToken', userData.accessToken);
-        localStorage.setItem('refreshToken', userData.refreshToken);
-        localStorage.setItem('userId', userData.user.id);
-        localStorage.setItem('phoneNumber', userData.user.phoneNumber);
-        setUser(userData.user);
+    const isAuthenticated = !!user && !!localStorage.getItem('accessToken');
+
+    const login = (authResult) => {
+        const userData = {
+            phone:     authResult.phone || authResult.phoneNumber,
+            isNewUser: authResult.isNewUser,
+        };
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        // токены уже сохранены в authApi.js
     };
 
     const logout = () => {
-        localStorage.clear();
         setUser(null);
+        localStorage.clear();
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-export const useAuthContext = () => useContext(AuthContext);
+export function useAuthContext() {
+    return useContext(AuthContext);
+}

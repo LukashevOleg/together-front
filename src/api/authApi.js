@@ -1,75 +1,71 @@
-// src/api/authApi.js
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-// ── Axios instance ──────────────────────────────────────────────────────────
 const api = axios.create({
-    baseURL: BASE_URL,
-    headers: { 'Content-Type': 'application/json' },
-    timeout: 10_000,
+    baseURL: 'http://localhost:8080',
 });
 
-// ── Request interceptor: добавляем JWT токен ────────────────────────────────
+let isRefreshing = false;
+let waitQueue = [];
+
+const processQueue = (error, token = null) => {
+    waitQueue.forEach(({ resolve, reject }) =>
+        error ? reject(error) : resolve(token)
+    );
+    waitQueue = [];
+};
+
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
 
-// ── Response interceptor: обновляем токен при 401 ──────────────────────────
 api.interceptors.response.use(
-    (response) => response,
+    (res) => res,
     async (error) => {
-        const originalRequest = error.config;
-
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
+        const original = error.config;
+        if (error.response?.status === 401 && !original._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    waitQueue.push({ resolve, reject });
+                }).then((token) => {
+                    original.headers.Authorization = `Bearer ${token}`;
+                    return api(original);
+                });
+            }
+            original._retry = true;
+            isRefreshing = true;
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
-                if (!refreshToken) throw new Error('No refresh token');
-
-                const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, { refreshToken });
-                localStorage.setItem('accessToken', data.accessToken);
+                const { data } = await axios.post('http://localhost:8080/api/auth/refresh', { refreshToken });
+                localStorage.setItem('accessToken',  data.accessToken);
                 localStorage.setItem('refreshToken', data.refreshToken);
-
-                originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-                return api(originalRequest);
-            } catch {
-                // Refresh провалился — выходим
+                processQueue(null, data.accessToken);
+                original.headers.Authorization = `Bearer ${data.accessToken}`;
+                return api(original);
+            } catch (e) {
+                processQueue(e, null);
                 localStorage.clear();
                 window.location.href = '/login';
+                return Promise.reject(e);
+            } finally {
+                isRefreshing = false;
             }
         }
         return Promise.reject(error);
     }
 );
 
-// ── Auth API методы ─────────────────────────────────────────────────────────
-export const authApi = {
-    /**
-     * Отправить OTP на номер телефона
-     * @param {string} phoneNumber — в формате +79001234567
-     */
-    sendOtp: (phoneNumber) =>
-        api.post('/api/auth/send-otp', { phoneNumber }),
+export async function sendOtpRequest(phoneNumber) {
+    const { data } = await api.post('/api/auth/send-otp', { phoneNumber });
+    return data;
+}
 
-    /**
-     * Верифицировать OTP
-     * @param {string} phoneNumber
-     * @param {string} otpCode
-     */
-    verifyOtp: (phoneNumber, otpCode) =>
-        api.post('/api/auth/verify-otp', { phoneNumber, otpCode }),
-
-    /**
-     * Обновить токены
-     * @param {string} refreshToken
-     */
-    refreshToken: (refreshToken) =>
-        api.post('/api/auth/refresh', { refreshToken }),
-};
+export async function verifyOtpRequest(phoneNumber, code) {
+    const { data } = await api.post('/api/auth/verify-otp', { phoneNumber, otpCode: code });
+    localStorage.setItem('accessToken',  data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    return data;
+}
 
 export default api;

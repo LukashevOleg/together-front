@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { authApi } from '../api/authApi';
+import { sendOtpRequest, verifyOtpRequest } from '../api/authApi';
 
 export function useAuth() {
+    const [step,        setStep]        = useState('phone');
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [step, setStep] = useState('phone'); // 'phone' | 'otp'
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [ttlMinutes, setTtlMinutes] = useState(5);
+    const [loading,     setLoading]     = useState(false);
+    const [error,       setError]       = useState(null);
+    const [ttlMinutes,  setTtlMinutes]  = useState(5);
 
     const sendOtp = async (phone) => {
         setLoading(true);
-        setError('');
+        setError(null);
         try {
-            const { data } = await authApi.sendOtp(phone);
+            const data = await sendOtpRequest(phone);
             setPhoneNumber(phone);
-            setTtlMinutes(data.ttlMinutes);
+            setTtlMinutes(data.ttlMinutes || 5);
             setStep('otp');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+        } catch (e) {
+            setError(e.response?.data?.message || 'Не удалось отправить код');
         } finally {
             setLoading(false);
         }
@@ -25,32 +25,19 @@ export function useAuth() {
 
     const verifyOtp = async (otpCode) => {
         setLoading(true);
-        setError('');
+        setError(null);
         try {
-            const { data } = await authApi.verifyOtp(phoneNumber, otpCode);
-
-            return { success: true, isNewUser: data.isNewUser, user: data.user };
-        } catch (err) {
-            setError(err.response?.data?.message || 'Invalid OTP code.');
-            return { success: false };
+            const data = await verifyOtpRequest(phoneNumber, otpCode);
+            return { success: true, ...data };
+        } catch (e) {
+            setError(e.response?.data?.message || 'Неверный код. Попробуйте ещё раз.');
+            return null;
         } finally {
             setLoading(false);
         }
     };
 
-    const goBack = () => {
-        setStep('phone');
-        setError('');
-    };
+    const goBack = () => { setStep('phone'); setError(null); };
 
-    return {
-        step,
-        phoneNumber,
-        loading,
-        error,
-        ttlMinutes,
-        sendOtp,
-        verifyOtp,
-        goBack,
-    };
+    return { step, phoneNumber, loading, error, ttlMinutes, sendOtp, verifyOtp, goBack };
 }

@@ -1,0 +1,117 @@
+.idea-small-card {
+    flex-shrink: 0;
+    width: 210px;
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    animation: fadeSlideUp 0.5s ease both;
+}
+
+.small-card-image {
+    width: 100%;
+    height: 140px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+}
+
+.small-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.small-card-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.small-card-save {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.small-card-body {
+    padding: 14px 14px 16px;
+}
+
+.small-card-title {
+    font-family: 'Cormorant', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--black);
+    line-height: 1.3;
+    margin-bottom: 10px;
+}
+
+.small-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.meta-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 8px;
+}
+
+.meta-tag svg {
+    width: 12px;
+    height: 12px;
+}
+
+.small-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.small-card-price {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--black);
+}
+
+.small-card-price span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.small-card-rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--black);
+}
+
+.small-card-rating::before {
+    content: '★';
+    color: var(--burgundy);
+    font-size: 13px;
+}

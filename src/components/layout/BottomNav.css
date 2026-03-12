@@ -1,0 +1,68 @@
+.bottom-nav {
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 12px 20px 28px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 1.8;
+}
+
+.nav-item.active .nav-icon svg { stroke: var(--burgundy); }
+.nav-item.active .nav-label    { color: var(--burgundy); }
+
+.nav-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.nav-center-btn {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    background: var(--burgundy);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -18px;
+    box-shadow: 0 4px 16px rgba(123,30,46,0.35);
+    cursor: pointer;
+}
+
+.nav-center-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+}

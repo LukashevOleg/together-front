@@ -1,0 +1,146 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
+import BottomNav from '../../components/layout/BottomNav';
+import IdeaSmallCard from '../../components/ui/IdeaSmallCard';
+import api from '../../api/authApi';
+import './HomePage.css';
+
+const FILTER_CHIPS = [
+    { key: null,       icon: '🔥', label: 'Популярное' },
+    { key: 'free',     icon: '💸', label: 'Бесплатно' },
+    { key: 'OUTDOOR',  icon: '🌿', label: 'Природа' },
+    { key: 'FOOD',     icon: '🍽', label: 'Гастро' },
+    { key: 'ACTIVE',   icon: '⚡', label: 'Экстрим' },
+    { key: 'CREATIVE', icon: '🎨', label: 'Творчество' },
+];
+
+export default function HomePage() {
+    const { user } = useAuthContext();
+    const navigate = useNavigate();
+    const [activeFilter, setActiveFilter] = useState(null);
+    const [ideas, setIdeas] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchIdeas();
+    }, [activeFilter]);
+
+    const fetchIdeas = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ size: 10, sortBy: 'rating' });
+            if (activeFilter === 'free')    params.set('priceTo', '0');
+            else if (activeFilter)          params.set('category', activeFilter);
+            const { data } = await api.get(`/api/ideas?${params}`);
+            setIdeas(data.content || []);
+        } catch {
+            setIdeas([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getGreeting = () => {
+        const h = new Date().getHours();
+        if (h < 6)  return 'Доброй ночи';
+        if (h < 12) return 'Доброе утро';
+        if (h < 18) return 'Добрый день';
+        return 'Добрый вечер';
+    };
+
+    return (
+        <div className="home-page">
+            {/* STATUS BAR */}
+            <div className="status-bar">
+                <span className="time">9:41</span>
+                <div className="status-icons">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="3" height="12" rx="1"/><rect x="6" y="9" width="3" height="9" rx="1"/><rect x="11" y="5" width="3" height="13" rx="1"/><rect x="16" y="2" width="3" height="16" rx="1"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M22 11v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="4" y="9" width="10" height="7" rx="1" fill="currentColor"/></svg>
+                </div>
+            </div>
+
+            {/* HEADER */}
+            <div className="home-header">
+                <div className="header-left">
+                    <div className="greeting">{getGreeting()} 👋</div>
+                    <div className="logo">Вме<span>сте</span></div>
+                </div>
+                <div className="avatar">🌸</div>
+            </div>
+
+            {/* SCROLL AREA */}
+            <div className="scroll-area">
+
+                {/* MODES */}
+                <div className="section">
+                    <div className="section-header">
+                        <div className="section-title">Что планируем?</div>
+                        <span className="section-tag">выбери формат</span>
+                    </div>
+                    <div className="split-concept">
+                        <div className="split-card sa" onClick={() => navigate('/ideas?mode=spontaneous')}>
+                            <div className="split-left">
+                                <div className="split-chip">Прямо сейчас</div>
+                                <div className="split-title">Спонтанное<br/>свидание</div>
+                                <div className="split-sub">Идеи под погоду и настроение</div>
+                            </div>
+                            <div className="split-emoji">✨</div>
+                            <div className="split-arrow">→</div>
+                        </div>
+                        <div className="split-card sb" onClick={() => navigate('/ideas?mode=planned')}>
+                            <div className="split-left">
+                                <div className="split-chip">Планирую заранее</div>
+                                <div className="split-title">Запланированное<br/>свидание</div>
+                                <div className="split-sub">Дата, время, бронирование</div>
+                            </div>
+                            <div className="split-emoji">🗓</div>
+                            <div className="split-arrow">→</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* IDEAS FOR YOU */}
+                <div className="section">
+                    <div className="section-header">
+                        <div className="section-title">Идеи для вас</div>
+                        <span className="see-all" onClick={() => navigate('/ideas')}>Все →</span>
+                    </div>
+
+                    {/* FILTER CHIPS */}
+                    <div className="filter-scroll">
+                        {FILTER_CHIPS.map(chip => (
+                            <div
+                                key={chip.key}
+                                className={`chip ${activeFilter === chip.key ? 'active' : ''}`}
+                                onClick={() => setActiveFilter(chip.key)}
+                            >
+                                <span className="chip-icon">{chip.icon}</span> {chip.label}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* IDEA CARDS */}
+                    <div className="cards-scroll">
+                        {loading
+                            ? [1,2,3].map(i => <div key={i} className="idea-card-skeleton" />)
+                            : ideas.map((idea, i) => (
+                                <IdeaSmallCard
+                                    key={idea.id}
+                                    idea={idea}
+                                    style={{ animationDelay: `${i * 0.1}s` }}
+                                    onClick={() => navigate(`/ideas/${idea.id}`)}
+                                />
+                            ))
+                        }
+                    </div>
+                </div>
+
+                <div style={{ height: 20 }} />
+            </div>
+
+            <BottomNav onCreateClick={() => navigate('/ideas/create')} />
+        </div>
+    );
+}
