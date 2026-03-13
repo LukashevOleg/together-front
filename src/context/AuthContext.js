@@ -2,6 +2,16 @@ import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
+/** Достаём userId из payload JWT без внешних библиотек */
+function decodeUserId(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
         try {
@@ -13,6 +23,11 @@ export function AuthProvider({ children }) {
     });
 
     const isAuthenticated = !!user && !!localStorage.getItem('accessToken');
+
+    // userId — декодируем из токена при каждом обращении
+    const userId = isAuthenticated
+        ? decodeUserId(localStorage.getItem('accessToken'))
+        : null;
 
     const login = (authResult) => {
         const userData = {
@@ -30,7 +45,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+        <AuthContext.Provider value={{ user, userId, isAuthenticated, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

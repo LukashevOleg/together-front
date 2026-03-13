@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getIdeaById } from '../../api/ideaApi';
+import { createDateEvent } from '../../api/datingApi';
+import { getMyProfile } from '../../api/profilerApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './IdeaDetailPage.css';
 
@@ -160,16 +162,27 @@ export default function IdeaDetailPage() {
 
     const [idea,      setIdea]      = useState(null);
     const [loading,   setLoading]   = useState(true);
+    const [partnerId, setPartnerId] = useState(null);
     const [saved,     setSaved]     = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
+    const [sending,   setSending]   = useState(false);
     const [toast,     setToast]     = useState('');
 
+    // Загружаем идею и партнёра параллельно
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
-        getIdeaById(id)
-            .then(data => { if (!cancelled) { setIdea(data); setLoading(false); } })
-            .catch(()  => { if (!cancelled) setLoading(false); });
+        Promise.all([
+            getIdeaById(id),
+            getMyProfile().catch(() => null),
+        ]).then(([ideaData, profile]) => {
+            if (cancelled) return;
+            setIdea(ideaData);
+            // partnerId пока не хранится в профиле напрямую — придёт через getPartner()
+            // Используем profile.partnerId если бэк его добавит, пока null
+            setPartnerId(profile?.partnerId ?? null);
+            setLoading(false);
+        }).catch(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
     }, [id]);
 
@@ -182,20 +195,40 @@ export default function IdeaDetailPage() {
 
     const handleInviteClick = () => {
         if (source === 'spontaneous') {
-            // Спонтанное — без модала, просто отправляем с сегодняшней датой
-            // TODO: вызвать API: inviteSpontaneous({ ideaId: id, date: todayISO() })
-            showToast('Приглашение отправлено 💌');
+            handleSend({
+                date:       todayISO(),
+                time:       null,
+                isSurprise: false,
+                hint:       '',
+            });
         } else {
-            // Запланированное / главная / лента — модал с выбором даты и времени
             setModalOpen(true);
         }
     };
 
-    const handleSend = ({ date, time, isSurprise, hint }) => {
-        // TODO: вызвать API: invitePlanned({ ideaId: id, date, time, isSurprise, hint })
-        console.log('Invite:', { ideaId: id, date, time, isSurprise, hint });
-        setModalOpen(false);
-        showToast('Приглашение отправлено 💌');
+    const handleSend = async ({ date, time, isSurprise, hint }) => {
+        setSending(true);
+        try {
+            await createDateEvent({
+                ideaId:        Number(id),
+                ideaTitle:     idea.title,
+                ideaCategory:  idea.category || null,
+                scheduledDate: date,
+                scheduledTime: time || null,
+                isSurprise:    Boolean(isSurprise),
+                hint:          hint || null,
+                source:        source === 'spontaneous' ? 'SPONTANEOUS' : 'PLANNED',
+            }, partnerId);
+            setModalOpen(false);
+            showToast('Приглашение отправлено 💌');
+        } catch (e) {
+            const msg = e.response?.status === 400
+                ? 'Нет партнёра или неверные данные'
+                : 'Ошибка при отправке, попробуйте ещё раз';
+            showToast(msg);
+        } finally {
+            setSending(false);
+        }
     };
 
     if (loading) return <div className="idea-detail-page"><div className="id-loading">Загружаем...</div></div>;
@@ -296,11 +329,11 @@ export default function IdeaDetailPage() {
                         </>
                     )}
 
-                    <button className="id-cta" onClick={handleInviteClick}>
+                    <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                         </svg>
-                        {ctaLabel}
+                        {sending ? 'Отправляем…' : ctaLabel}
                     </button>
                 </div>
             </div>
