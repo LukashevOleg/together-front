@@ -1,0 +1,316 @@
+.date-mode-page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: #EBEBEB;
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.status-icons { display: flex; gap: 5px; }
+.status-icons svg { width: 16px; height: 16px; }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.dm-header {
+    padding: 4px 20px 14px;
+    flex-shrink: 0;
+}
+.dm-back-row { margin-bottom: 4px; }
+.dm-btn-back {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid #E5E3E0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.dm-btn-back svg { width: 15px; height: 15px; stroke: #111; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+.dm-title {
+    font-family: 'Cormorant', serif;
+    font-size: 28px; font-weight: 600;
+    line-height: 1.1;
+}
+.dm-title span { color: #7B1E2E; }
+
+.dm-sub-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+/* Planned: date pill */
+.dm-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid #E5E3E0;
+    border-radius: 20px;
+    padding: 6px 13px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    position: relative;
+}
+.dm-date-pill svg { width: 13px; height: 13px; stroke: #7B1E2E; fill: none; stroke-width: 2; }
+.dm-date-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px; /* prevent iOS zoom */
+}
+
+/* Spontaneous: now pill */
+.dm-now-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1.5px solid #E5E3E0;
+    border-radius: 20px;
+    padding: 6px 13px;
+    font-size: 13px; font-weight: 500;
+}
+.dm-now-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4CAF50;
+    flex-shrink: 0;
+}
+
+.dm-weather { font-size: 12px; color: #888; }
+
+/* ── Hero card ───────────────────────────────────────────────────────────── */
+.dm-hero {
+    margin: 0 20px 16px;
+    background: #111;
+    border-radius: 24px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.dm-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 90% 15%, rgba(123,30,46,0.28) 0%, transparent 58%);
+}
+.dm-hero-emoji {
+    position: absolute;
+    top: 50%; right: 18px;
+    transform: translateY(-50%);
+    font-size: 72px;
+    z-index: 1;
+    line-height: 1;
+    filter: drop-shadow(0 0 18px rgba(255,255,180,0.45));
+}
+
+/* Planned: find-btn style */
+.dm-hero-find {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dm-hero-find-left { z-index: 1; position: relative; }
+.dm-hero-find-label { font-family: 'Cormorant', serif; font-size: 19px; font-weight: 600; color: #fff; }
+.dm-hero-find-arrow {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #7B1E2E;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+}
+.dm-hero-find-arrow svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* Spontaneous: sub + btn */
+.dm-hero-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.42);
+    line-height: 1.45;
+    margin-bottom: 16px;
+    position: relative; z-index: 1;
+    max-width: 215px;
+}
+.dm-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #7B1E2E;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    position: relative; z-index: 1;
+}
+.dm-hero-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+/* ── Tab bar ─────────────────────────────────────────────────────────────── */
+.dm-tab-bar {
+    display: flex;
+    padding: 0 20px;
+    flex-shrink: 0;
+    margin-bottom: 14px;
+    position: relative;
+}
+.dm-tab-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 20px; right: 20px;
+    height: 1.5px;
+    background: #E5E3E0;
+    border-radius: 1px;
+}
+.dm-tab {
+    flex: 1;
+    padding: 8px 0 11px;
+    font-size: 13px; font-weight: 400;
+    color: #888;
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    transition: color 0.2s;
+    user-select: none;
+    position: relative;
+    z-index: 1;
+}
+.dm-tab.active { color: #7B1E2E; font-weight: 500; }
+.dm-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background: #7B1E2E;
+    border-radius: 1px;
+    transition: left 0.3s cubic-bezier(0.25,0.46,0.45,0.94), width 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    z-index: 2;
+}
+
+/* ── Swipe container ─────────────────────────────────────────────────────── */
+.dm-swipe-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+.dm-swipe-track {
+    display: flex;
+    height: 100%;
+    will-change: transform;
+}
+.dm-swipe-pane {
+    width: 100%;
+    flex-shrink: 0;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-bottom: 16px;
+}
+.dm-swipe-pane::-webkit-scrollbar { display: none; }
+
+.dm-pane-sub {
+    padding: 2px 20px 12px;
+    font-size: 13px;
+    color: #888;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.dm-match-card {
+    margin: 0 20px 10px;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    cursor: pointer;
+    border: 1.5px solid #F2E8EA;
+    animation: dmUp 0.35s ease both;
+    transition: background 0.12s;
+}
+.dm-match-card:active { background: #FAFAFA; }
+
+.dm-idea-card {
+    margin: 0 20px 10px;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    cursor: pointer;
+    border: 1.5px solid #E5E3E0;
+    animation: dmUp 0.35s ease both;
+    transition: background 0.12s;
+}
+.dm-idea-card:active { background: #FAFAFA; }
+
+.dm-match-card:nth-child(1), .dm-idea-card:nth-child(1) { animation-delay: 0s; }
+.dm-match-card:nth-child(2), .dm-idea-card:nth-child(2) { animation-delay: .05s; }
+.dm-match-card:nth-child(3), .dm-idea-card:nth-child(3) { animation-delay: .1s; }
+
+.dm-card-img {
+    width: 110px; height: 110px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+}
+.dm-card-body {
+    flex: 1;
+    padding: 13px 14px 13px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.dm-card-title {
+    font-family: 'Cormorant', serif;
+    font-size: 16px; font-weight: 600;
+    color: #111;
+    line-height: 1.25;
+}
+.dm-card-meta { font-size: 12px; color: #888; margin-top: 7px; }
+
+/* See all button */
+.dm-see-all {
+    margin: 6px 20px 0;
+    background: #fff;
+    border: 1.5px solid #E5E3E0;
+    border-radius: 14px;
+    padding: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: #111;
+    cursor: pointer;
+    width: calc(100% - 40px);
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+}
+.dm-see-all svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 2; }
+
+/* Empty state */
+.dm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    text-align: center;
+    gap: 10px;
+}
+.dm-empty-emoji { font-size: 44px; }
+.dm-empty-title { font-family: 'Cormorant', serif; font-size: 20px; font-weight: 600; }
+.dm-empty-sub { font-size: 13px; color: #888; line-height: 1.5; }
+
+@keyframes dmUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

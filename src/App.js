@@ -13,6 +13,8 @@ import LubimkaPage        from './pages/lubimkaPage/LubimkaPage';
 import PartnerProfilePage from './pages/partnerProfilePage/PartnerProfilePage';
 import ChatsPage          from './pages/chatsPage/ChatsPage';
 import AcceptInvitePage   from './pages/acceptInvitePage/AcceptInvitePage';
+import IdeaDetailPage    from './pages/ideaDetailPage/IdeaDetailPage';
+import DateModePage     from './pages/dateModePage/DateModePage';
 
 import './styles/globals.css';
 
@@ -38,7 +40,6 @@ function AppRoutes() {
         <Routes>
             <Route path="/login" element={<AuthRoute />} />
 
-            {/* Инвайт — доступен без авторизации, сама страница делает редирект */}
             <Route path="/join/:code" element={<AcceptInvitePage />} />
 
             <Route path="/onboarding"   element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
@@ -49,7 +50,10 @@ function AppRoutes() {
             <Route path="/ideas/create" element={<PrivateRoute><CreateIdeaPage /></PrivateRoute>} />
             <Route path="/lubimka"      element={<PrivateRoute><LubimkaPage /></PrivateRoute>} />
             <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
+            <Route path="/spontaneous"  element={<PrivateRoute><DateModePage mode="spontaneous" /></PrivateRoute>} />
+            <Route path="/planned"      element={<PrivateRoute><DateModePage mode="planned" /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
+            <Route path="/ideas/:id"    element={<PrivateRoute><IdeaDetailPage /></PrivateRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

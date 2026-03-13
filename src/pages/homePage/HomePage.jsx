@@ -84,7 +84,7 @@ export default function HomePage() {
                         <span className="section-tag">выбери формат</span>
                     </div>
                     <div className="split-concept">
-                        <div className="split-card sa" onClick={() => navigate('/ideas?mode=spontaneous')}>
+                        <div className="split-card sa" onClick={() => navigate('/spontaneous')}>
                             <div className="split-left">
                                 <div className="split-chip">Прямо сейчас</div>
                                 <div className="split-title">Спонтанное<br/>свидание</div>
@@ -93,7 +93,7 @@ export default function HomePage() {
                             <div className="split-emoji">✨</div>
                             <div className="split-arrow">→</div>
                         </div>
-                        <div className="split-card sb" onClick={() => navigate('/ideas?mode=planned')}>
+                        <div className="split-card sb" onClick={() => navigate('/planned')}>
                             <div className="split-left">
                                 <div className="split-chip">Планирую заранее</div>
                                 <div className="split-title">Запланированное<br/>свидание</div>
