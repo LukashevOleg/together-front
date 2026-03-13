@@ -205,14 +205,6 @@ export default function LoginPage({ onAuthSuccess }) {
 
     return (
         <div className="login-page">
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="3" height="12" rx="1"/><rect x="6" y="9" width="3" height="9" rx="1"/><rect x="11" y="5" width="3" height="13" rx="1"/><rect x="16" y="2" width="3" height="16" rx="1"/></svg>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
-                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M22 11v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="4" y="9" width="10" height="7" rx="1" fill="currentColor"/></svg>
-                </div>
-            </div>
 
             {step === 'phone'
                 ? <PhoneScreen onSubmit={sendOtp} loading={loading} error={error} />

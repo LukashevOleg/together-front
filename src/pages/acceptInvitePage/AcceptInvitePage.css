@@ -1,0 +1,111 @@
+.accept-invite-page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: #EBEBEB;
+    font-family: 'DM Sans', sans-serif;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.ai-card {
+    width: 100%;
+    max-width: 360px;
+    background: #fff;
+    border-radius: 24px;
+    border: 1.5px solid #E5E3E0;
+    padding: 32px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: aiFadeUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.ai-emoji {
+    font-size: 64px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+    animation: aiBounce 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.ai-title {
+    font-family: 'Cormorant', serif;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 8px;
+}
+.ai-title span { color: #7B1E2E; }
+
+.ai-sub {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.55;
+    margin-bottom: 28px;
+}
+
+/* Кнопка принять */
+.ai-btn-accept {
+    width: 100%;
+    background: #7B1E2E;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+    margin-bottom: 10px;
+}
+.ai-btn-accept:disabled { opacity: 0.5; cursor: default; }
+.ai-btn-accept svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+/* Кнопка отмены */
+.ai-btn-cancel {
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: #888;
+    cursor: pointer;
+    padding: 8px;
+    font-family: 'DM Sans', sans-serif;
+}
+.ai-btn-cancel:hover { color: #111; }
+
+/* ── Состояния ───────────────────────────────────────────────────────────── */
+.ai-error {
+    background: #FDF5F5;
+    border: 1.5px solid #E8C0C0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #C0392B;
+    margin-bottom: 16px;
+    width: 100%;
+    text-align: center;
+}
+
+.ai-success-emoji {
+    font-size: 72px;
+    margin-bottom: 16px;
+    animation: aiBounce 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.15));
+}
+
+@keyframes aiFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes aiBounce {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+}

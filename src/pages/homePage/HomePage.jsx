@@ -4,6 +4,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import BottomNav from '../../components/layout/BottomNav';
 import IdeaSmallCard from '../../components/ui/IdeaSmallCard';
 import api from '../../api/authApi';
+import { getMyProfile } from '../../api/profilerApi';
 import './HomePage.css';
 
 const FILTER_CHIPS = [
@@ -18,6 +19,13 @@ const FILTER_CHIPS = [
 export default function HomePage() {
     const { user } = useAuthContext();
     const navigate = useNavigate();
+    const [avatarUrl, setAvatarUrl] = useState(null);
+
+    useEffect(() => {
+        getMyProfile()
+            .then(p => setAvatarUrl(p.avatarUrl))
+            .catch(() => {});
+    }, []);
     const [activeFilter, setActiveFilter] = useState(null);
     const [ideas, setIdeas] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -51,15 +59,6 @@ export default function HomePage() {
 
     return (
         <div className="home-page">
-            {/* STATUS BAR */}
-            <div className="status-bar">
-                <span className="time">9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="3" height="12" rx="1"/><rect x="6" y="9" width="3" height="9" rx="1"/><rect x="11" y="5" width="3" height="13" rx="1"/><rect x="16" y="2" width="3" height="16" rx="1"/></svg>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
-                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M22 11v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="4" y="9" width="10" height="7" rx="1" fill="currentColor"/></svg>
-                </div>
-            </div>
 
             {/* HEADER */}
             <div className="home-header">
@@ -67,7 +66,12 @@ export default function HomePage() {
                     <div className="greeting">{getGreeting()} 👋</div>
                     <div className="logo">Вме<span>сте</span></div>
                 </div>
-                <div className="avatar">🌸</div>
+                <div className="avatar" onClick={() => navigate("/profile")}>
+                    {avatarUrl
+                        ? <img src={avatarUrl} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}}/>
+                        : "🌸"
+                    }
+                </div>
             </div>
 
             {/* SCROLL AREA */}

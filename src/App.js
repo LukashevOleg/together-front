@@ -7,6 +7,12 @@ import HomePage       from './pages/homePage/HomePage';
 import IdeasPage      from './pages/ideasPage/IdeasPage';
 import IdeasFeedPage  from './pages/ideasFeedPage/IdeasFeedPage';
 import CreateIdeaPage from './pages/createIdeaPage/CreateIdeaPage';
+import OnboardingPage  from './pages/onboardingPage/OnboardingPage';
+import ProfilePage     from './pages/profilePage/ProfilePage';
+import LubimkaPage        from './pages/lubimkaPage/LubimkaPage';
+import PartnerProfilePage from './pages/partnerProfilePage/PartnerProfilePage';
+import ChatsPage          from './pages/chatsPage/ChatsPage';
+import AcceptInvitePage   from './pages/acceptInvitePage/AcceptInvitePage';
 
 import './styles/globals.css';
 
@@ -21,7 +27,7 @@ function AuthRoute() {
 
     const handleAuthSuccess = (result) => {
         login(result);
-        navigate(result.isNewUser ? '/welcome' : '/', { replace: true });
+        navigate(result.isNewUser ? '/onboarding' : '/', { replace: true });
     };
 
     return <LoginPage onAuthSuccess={handleAuthSuccess} />;
@@ -32,20 +38,19 @@ function AppRoutes() {
         <Routes>
             <Route path="/login" element={<AuthRoute />} />
 
-            <Route path="/" element={
-                <PrivateRoute><HomePage /></PrivateRoute>
-            } />
-            <Route path="/ideas" element={
-                <PrivateRoute><IdeasPage /></PrivateRoute>
-            } />
-            <Route path="/ideas/feed" element={
-                <PrivateRoute><IdeasFeedPage /></PrivateRoute>
-            } />
-            <Route path="/ideas/create" element={
-                <PrivateRoute><CreateIdeaPage /></PrivateRoute>
-            } />
+            {/* Инвайт — доступен без авторизации, сама страница делает редирект */}
+            <Route path="/join/:code" element={<AcceptInvitePage />} />
 
-            {/* fallback */}
+            <Route path="/onboarding"   element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
+            <Route path="/profile"      element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+            <Route path="/"             element={<PrivateRoute><HomePage /></PrivateRoute>} />
+            <Route path="/ideas"        element={<PrivateRoute><IdeasPage /></PrivateRoute>} />
+            <Route path="/ideas/feed"   element={<PrivateRoute><IdeasFeedPage /></PrivateRoute>} />
+            <Route path="/ideas/create" element={<PrivateRoute><CreateIdeaPage /></PrivateRoute>} />
+            <Route path="/lubimka"      element={<PrivateRoute><LubimkaPage /></PrivateRoute>} />
+            <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
+            <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
