@@ -39,13 +39,33 @@ export async function saveOnboardingStep(step, fields) {
 
 // ── Partner ───────────────────────────────────────────────────────────────
 
-/** Получить текущего партнёра. Возвращает PartnerResponse или null (204) */
+/** Получить публичный профиль пользователя по его ID (для страницы партнёра) */
+export async function getProfileById(userId) {
+    const { data } = await api.get(`/api/profile/${userId}`);
+    return data; // ProfileDto.Response без phone
+}
+
+/**
+ * Получить текущего партнёра.
+ * Profiler возвращает { partnerUserId, partnerName, partnerAvatarUrl, connectedAt }
+ * Нормализуем в { id, name, avatarUrl, connectedAt } для удобства на фронте.
+ * Возвращает null если партнёра нет (204).
+ */
 export async function getPartner() {
     try {
         const { data } = await api.get('/api/partner');
-        return data;
+        if (!data) return null;
+        // Нормализация: унифицируем имена полей
+        return {
+            id:          data.partnerUserId,
+            name:        data.partnerName        || 'Партнёр',
+            avatarUrl:   data.partnerAvatarUrl   || null,
+            connectedAt: data.connectedAt,
+            // Оригинальные поля тоже оставляем на случай прямого использования
+            ...data,
+        };
     } catch (e) {
-        if (e.response?.status === 204) return null;
+        if (e.response?.status === 204 || e.response?.status === 404) return null;
         throw e;
     }
 }

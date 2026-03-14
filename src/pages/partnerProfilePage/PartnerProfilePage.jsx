@@ -1,46 +1,122 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getPartner, getProfileById, removePartner } from '../../api/profilerApi';
+import { getMatches }     from '../../api/swipesApi';
+import { getDateHistory } from '../../api/datingApi';
+import { categoryEmoji, categoryGradient, formatEventDate } from '../../api/datingApi';
 import './PartnerProfilePage.css';
 
-// ── Заглушки ───────────────────────────────────────────────────────────────
-const STUB_PARTNER = {
-    name: 'Анастасия',
-    emoji: '🌸',
-    avatarUrl: null,
-    isOnline: true,
-    matches: 14,
-    dates: 8,
-    together: 42, // дней вместе
+// ── Helpers ────────────────────────────────────────────────────────────────
+const INTEREST_META = {
+    ROMANTIC:  { emoji: '🌹', label: 'Романтика' },
+    FOOD:      { emoji: '🍷', label: 'Гастро'    },
+    NATURE:    { emoji: '🌿', label: 'Природа'   },
+    CULTURE:   { emoji: '🎨', label: 'Культура'  },
+    EXTREME:   { emoji: '⚡', label: 'Экстрим'   },
+    RELAX:     { emoji: '🧖', label: 'Релакс'    },
+    ACTIVE:    { emoji: '🏃', label: 'Активное'  },
+    NIGHTLIFE: { emoji: '🌙', label: 'Ночные'    },
 };
 
-const ALL_INTERESTS = [
-    { key: 'ROMANTIC',  emoji: '🌹', label: 'Романтика', liked: true },
-    { key: 'FOOD',      emoji: '🍷', label: 'Гастро',    liked: true },
-    { key: 'NATURE',    emoji: '🌿', label: 'Природа',   liked: true },
-    { key: 'CULTURE',   emoji: '🎨', label: 'Культура',  liked: false },
-    { key: 'EXTREME',   emoji: '⚡', label: 'Экстрим',   liked: false },
-    { key: 'RELAX',     emoji: '🧖', label: 'Релакс',    liked: true },
-    { key: 'ACTIVE',    emoji: '🏃', label: 'Активное',  liked: false },
-    { key: 'NIGHTLIFE', emoji: '🌙', label: 'Ночные',    liked: true },
-];
+function daysSince(isoDate) {
+    if (!isoDate) return null;
+    const diff = Date.now() - new Date(isoDate).getTime();
+    return Math.floor(diff / 86400000);
+}
 
-const STUB_DATES = [
-    { id: 1, emoji: '🌹', bg: 'linear-gradient(135deg,#3D0A14,#7B1E2E)', title: 'Вечерний пикник на крыше', meta: '15 февраля · 2 часа',  rating: '5.0' },
-    { id: 2, emoji: '⛸',  bg: 'linear-gradient(135deg,#1A1A1A,#383838)', title: 'Катание на коньках',       meta: '2 февраля · 1.5 часа', rating: '4.8' },
-    { id: 3, emoji: '🍷', bg: 'linear-gradient(135deg,#1C1C1C,#3A3A3A)', title: 'Винная дегустация',        meta: '20 января · 2 часа',   rating: '4.9' },
-];
+function formatDateMeta(event) {
+    if (!event?.scheduledDate) return '';
+    const d = new Date(event.scheduledDate);
+    const months = ['января','февраля','марта','апреля','мая','июня',
+        'июля','августа','сентября','октября','ноября','декабря'];
+    let s = `${d.getDate()} ${months[d.getMonth()]}`;
+    if (event.scheduledTime) s += ` · ${event.scheduledTime.slice(0,5)}`;
+    return s;
+}
 
 export default function PartnerProfilePage() {
-    const navigate = useNavigate();
+    const navigate  = useNavigate();
+
+    const [loading,  setLoading]  = useState(true);
+    const [partner,  setPartner]  = useState(null);  // из getPartner() — id, name, avatarUrl, connectedAt
+    const [profile,  setProfile]  = useState(null);  // из getProfileById() — интересы, город, возраст
+    const [matches,  setMatches]  = useState([]);     // из getMatches()
+    const [history,  setHistory]  = useState([]);     // из getDateHistory()
     const [menuOpen, setMenuOpen] = useState(false);
 
-    const handleRemovePartner = () => {
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+
+        // Сначала получаем партнёра чтобы узнать его userId
+        getPartner()
+            .then(async (partnerData) => {
+                if (cancelled || !partnerData) return;
+                setPartner(partnerData);
+
+                // Параллельно грузим профиль партнёра, матчи и историю
+                const [profileData, matchesData, historyData] = await Promise.all([
+                    getProfileById(partnerData.id).catch(() => null),
+                    getMatches().catch(() => []),
+                    getDateHistory().catch(() => []),
+                ]);
+
+                if (cancelled) return;
+                setProfile(profileData);
+                setMatches(matchesData);
+                setHistory(historyData);
+            })
+            .catch(() => {})
+            .finally(() => { if (!cancelled) setLoading(false); });
+
+        return () => { cancelled = true; };
+    }, []);
+
+    const handleRemovePartner = async () => {
         setMenuOpen(false);
-        if (window.confirm(`Удалить ${STUB_PARTNER.name} из партнёров?\nВся история свиданий и чаты будут сохранены.`)) {
-            // TODO: вызвать removePartner() из profilerApi
+        const name = partner?.name || 'партнёра';
+        if (!window.confirm(`Удалить ${name} из партнёров?\nВся история свиданий и чаты будут сохранены.`)) return;
+        try {
+            await removePartner();
             navigate('/lubimka', { replace: true });
+        } catch {
+            alert('Не удалось удалить партнёра. Попробуйте ещё раз.');
         }
     };
+
+    if (loading) {
+        return (
+            <div className="partner-profile-page" style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: '#888', fontSize: 14 }}>Загружаем профиль…</div>
+            </div>
+        );
+    }
+
+    if (!partner) {
+        return (
+            <div className="partner-profile-page" style={{ alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>💔</div>
+                <div style={{ fontFamily: 'Cormorant, serif', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Нет партнёра</div>
+                <div style={{ fontSize: 14, color: '#888' }}>Пригласите половинку в разделе Любимка</div>
+                <button onClick={() => navigate('/lubimka')}
+                        style={{ marginTop: 16, background: '#7B1E2E', color: '#fff', border: 'none',
+                            borderRadius: 14, padding: '12px 24px', fontSize: 14, cursor: 'pointer' }}>
+                    Любимка
+                </button>
+            </div>
+        );
+    }
+
+    // Данные для отображения
+    const name         = partner.name || 'Партнёр';
+    const avatarUrl    = partner.avatarUrl || null;
+    const together     = daysSince(partner.connectedAt);
+    const datesCount   = history.length;
+    const matchesCount = matches.length;
+    const interests    = profile?.interests || [];
+
+    // Прошлые свидания (история, до 3 штук)
+    const pastDates = history.slice(0, 3);
 
     return (
         <div className="partner-profile-page">
@@ -60,14 +136,16 @@ export default function PartnerProfilePage() {
             <div className="pp-scroll">
                 {/* HERO */}
                 <div className="pp-hero">
-                    {STUB_PARTNER.avatarUrl
-                        ? <img className="pp-hero-photo" src={STUB_PARTNER.avatarUrl} alt="partner" />
-                        : <div className="pp-hero-emoji">{STUB_PARTNER.emoji}</div>
+                    {avatarUrl
+                        ? <img className="pp-hero-photo" src={avatarUrl} alt={name} />
+                        : <div className="pp-hero-emoji">
+                            {name[0]?.toUpperCase() || '🌸'}
+                        </div>
                     }
                     <div className="pp-hero-overlay" />
                     <div className="pp-sparkles">✨</div>
 
-                    {/* Кнопка назад */}
+                    {/* Назад */}
                     <button className="pp-btn-back" onClick={() => navigate(-1)}>
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
@@ -80,7 +158,8 @@ export default function PartnerProfilePage() {
                             <circle cx="12" cy="19" r="1" fill="#fff" stroke="none"/>
                         </svg>
                     </button>
-                    <div className={`pp-menu-overlay ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)} />
+                    <div className={`pp-menu-overlay ${menuOpen ? 'open' : ''}`}
+                         onClick={() => setMenuOpen(false)} />
                     <div className={`pp-dots-menu ${menuOpen ? 'open' : ''}`}>
                         <div className="pp-dots-menu-item" onClick={handleRemovePartner}>
                             <svg viewBox="0 0 24 24">
@@ -95,28 +174,29 @@ export default function PartnerProfilePage() {
 
                     {/* Имя */}
                     <div className="pp-name-block">
-                        <div className="pp-name">{STUB_PARTNER.name}</div>
-                        <div className="pp-online">
-                            {STUB_PARTNER.isOnline && <div className="pp-online-dot" />}
-                            <div className="pp-online-label">
-                                {STUB_PARTNER.isOnline ? 'Онлайн сейчас' : 'Была недавно'}
+                        <div className="pp-name">{name}</div>
+                        {profile?.city && (
+                            <div className="pp-online">
+                                <div className="pp-online-label" style={{ opacity: 0.7 }}>
+                                    📍 {profile.city}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
                 {/* STATS STRIP */}
                 <div className="pp-stats-strip">
                     <div className="pp-stat">
-                        <div className="pp-stat-num">{STUB_PARTNER.matches}</div>
+                        <div className="pp-stat-num">{matchesCount}</div>
                         <div className="pp-stat-label">совпадений</div>
                     </div>
                     <div className="pp-stat">
-                        <div className="pp-stat-num">{STUB_PARTNER.dates}</div>
+                        <div className="pp-stat-num">{datesCount}</div>
                         <div className="pp-stat-label">свиданий</div>
                     </div>
                     <div className="pp-stat">
-                        <div className="pp-stat-num">{STUB_PARTNER.together}</div>
+                        <div className="pp-stat-num">{together ?? '—'}</div>
                         <div className="pp-stat-label">дней вместе</div>
                     </div>
                 </div>
@@ -125,40 +205,62 @@ export default function PartnerProfilePage() {
                     <div style={{ height: 20 }} />
 
                     {/* INVITE CARD */}
-                    <div className="pp-invite-card">
+                    <div className="pp-invite-card" onClick={() => navigate('/planned')}>
                         <div className="pp-invite-left">
                             <div className="pp-invite-label">Позвать на свидание</div>
-                            <div className="pp-invite-title">Отправить<br/>приглашение</div>
+                            <div className="pp-invite-title">Запланировать<br/>свидание</div>
                         </div>
                         <div className="pp-invite-emoji">💌</div>
                     </div>
 
                     {/* INTERESTS */}
-                    <div className="pp-section-title">
-                        Что <span>нравится</span> {STUB_PARTNER.name}
-                    </div>
-                    <div className="pp-pref-grid">
-                        {ALL_INTERESTS.map(i => (
-                            <div key={i.key} className={`pp-pref-chip ${i.liked ? 'liked' : ''}`}>
-                                {i.emoji} {i.label}
+                    {interests.length > 0 && (
+                        <>
+                            <div className="pp-section-title">
+                                Что <span>нравится</span> {name}
                             </div>
-                        ))}
-                    </div>
+                            <div className="pp-pref-grid">
+                                {Object.keys(INTEREST_META).map(key => {
+                                    const meta  = INTEREST_META[key];
+                                    const liked = interests.includes(key);
+                                    return (
+                                        <div key={key} className={`pp-pref-chip ${liked ? 'liked' : ''}`}>
+                                            {meta.emoji} {meta.label}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
 
                     {/* PAST DATES */}
-                    <div className="pp-section-title" style={{ marginBottom: 12 }}>
-                        Прошлые <span>свидания</span>
-                    </div>
-                    {STUB_DATES.map(d => (
-                        <div key={d.id} className="pp-date-item">
-                            <div className="pp-date-ava" style={{ background: d.bg }}>{d.emoji}</div>
-                            <div className="pp-date-info">
-                                <div className="pp-date-title">{d.title}</div>
-                                <div className="pp-date-meta">{d.meta}</div>
+                    {pastDates.length > 0 && (
+                        <>
+                            <div className="pp-section-title" style={{ marginBottom: 12 }}>
+                                Прошлые <span>свидания</span>
                             </div>
-                            <div className="pp-date-rating">⭐ {d.rating}</div>
+                            {pastDates.map(event => (
+                                <div key={event.id} className="pp-date-item"
+                                     onClick={() => navigate('/chats', { state: { eventId: event.id } })}>
+                                    <div className="pp-date-ava"
+                                         style={{ background: categoryGradient(event.ideaCategory) }}>
+                                        {categoryEmoji(event.ideaCategory)}
+                                    </div>
+                                    <div className="pp-date-info">
+                                        <div className="pp-date-title">{event.ideaTitle}</div>
+                                        <div className="pp-date-meta">{formatDateMeta(event)}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {/* Заглушка если нет ни интересов ни свиданий */}
+                    {interests.length === 0 && pastDates.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '24px 0', color: '#888', fontSize: 14 }}>
+                            {name} ещё не заполнил(а) профиль
                         </div>
-                    ))}
+                    )}
 
                     <div style={{ height: 20 }} />
                 </div>

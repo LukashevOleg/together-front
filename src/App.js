@@ -15,6 +15,7 @@ import ChatsPage          from './pages/chatsPage/ChatsPage';
 import AcceptInvitePage   from './pages/acceptInvitePage/AcceptInvitePage';
 import IdeaDetailPage    from './pages/ideaDetailPage/IdeaDetailPage';
 import DateModePage     from './pages/dateModePage/DateModePage';
+import SwipePage        from './pages/swipePage/SwipePage';
 
 import './styles/globals.css';
 
@@ -52,6 +53,7 @@ function AppRoutes() {
             <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
             <Route path="/spontaneous"  element={<PrivateRoute><DateModePage mode="spontaneous" /></PrivateRoute>} />
             <Route path="/planned"      element={<PrivateRoute><DateModePage mode="planned" /></PrivateRoute>} />
+            <Route path="/swipe"        element={<PrivateRoute><SwipePage /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
             <Route path="/ideas/:id"    element={<PrivateRoute><IdeaDetailPage /></PrivateRoute>} />
 
