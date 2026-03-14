@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPartner } from '../../api/profilerApi';
 import { getMatches } from '../../api/swipesApi';
 import {
-    getUpcomingDates,
+    getActiveChats,
     getDateHistory,
     categoryEmoji,
     categoryGradient,
@@ -17,7 +17,7 @@ export default function LubimkaPage() {
 
     const [partner,   setPartner]   = useState(null);
     const [matches,   setMatches]   = useState([]);
-    const [upcoming,  setUpcoming]  = useState([]);
+    const [chats,     setChats]     = useState([]);
     const [history,   setHistory]   = useState([]);
     const [loading,   setLoading]   = useState(true);
 
@@ -26,12 +26,12 @@ export default function LubimkaPage() {
         Promise.all([
             getPartner().catch(() => null),
             getMatches().catch(() => []),
-            getUpcomingDates().catch(() => []),
+            getActiveChats().catch(() => []),
             getDateHistory().catch(() => []),
-        ]).then(([partnerData, matchesData, upcomingData, historyData]) => {
+        ]).then(([partnerData, matchesData, chatsData, historyData]) => {
             setPartner(partnerData);
             setMatches(matchesData);
-            setUpcoming(upcomingData);
+            setChats(chatsData);
             setHistory(historyData);
             setLoading(false);
         });
@@ -39,11 +39,11 @@ export default function LubimkaPage() {
 
     const hasPartner = !!partner;
 
-    // Показываем до 3 чатов (ближайшие свидания)
-    const chatPreviews = upcoming.slice(0, 3);
+    // Показываем до 3 чатов (все активные — PENDING + ACCEPTED)
+    const chatPreviews = chats.slice(0, 3);
 
     // Статистика
-    const datesCount   = history.length + upcoming.filter(e => e.status === 'ACCEPTED').length;
+    const datesCount   = history.length;
     const matchesCount = matches.length;
 
     return (
@@ -241,10 +241,10 @@ export default function LubimkaPage() {
                                 <div className="lb-streak-left">
                                     <div className="lb-streak-label">Серия свиданий</div>
                                     <div className="lb-streak-num">
-                                        {upcoming.length > 0 ? `${upcoming.length} подряд` : 'Нет серии'}
+                                        {datesCount > 0 ? `${datesCount} всего` : 'Нет серии'}
                                     </div>
                                     <div className="lb-streak-desc">
-                                        {upcoming.length > 0 ? 'каждые выходные 🔥' : 'Запланируйте свидание'}
+                                        {chats.length > 0 ? `${chats.length} активных чатов 🔥` : 'Запланируйте свидание'}
                                     </div>
                                 </div>
                                 <div className="lb-streak-emoji">✨</div>

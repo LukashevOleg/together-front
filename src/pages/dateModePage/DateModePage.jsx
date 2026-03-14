@@ -1,30 +1,21 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getMatches }  from '../../api/swipesApi';
+import { getMyIdeas, getSavedIdeas } from '../../api/ideaApi';
+import { categoryEmoji, categoryGradient } from '../../api/datingApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './DateModePage.css';
 
-// ── Заглушки — потом заменим на API ──────────────────────────────────────────
-// Совпадения: GET /api/partner/matches (ещё нет на бэке)
-const STUB_MATCHES = [
-    { id: 101, emoji: '🌹', bg: 'linear-gradient(135deg,#3D0A14,#7B1E2E)', title: 'Вечерний пикник на крыше с видом на город', meta: '1 800 ₽ · 2 часа' },
-    { id: 102, emoji: '🌿', bg: 'linear-gradient(135deg,#0A1A0A,#1E3820)',  title: 'Прогулка в ботаническом саду',             meta: 'Бесплатно · 2 часа' },
-    { id: 103, emoji: '🎨', bg: 'linear-gradient(135deg,#4A1020,#8B2535)',  title: 'Мастер-класс по керамике вдвоём',          meta: '1 800 ₽ · 3 часа' },
-];
-
-// Сохранённое: GET /api/ideas?savedByUser=true (ещё нет на бэке)
-const STUB_SAVED = [
-    { id: 104, emoji: '⛸',  bg: 'linear-gradient(135deg,#1C1C1C,#383838)', title: 'Катание на коньках в Парке Горького',       meta: '900 ₽ · 1.5 часа' },
-    { id: 105, emoji: '🍷', bg: 'linear-gradient(135deg,#111,#2A2A2A)',    title: 'Винная дегустация в баре на Патриарших',   meta: '2 500 ₽ · 2 часа' },
-    { id: 106, emoji: '🕯',  bg: 'linear-gradient(135deg,#1A0A0A,#3A1520)', title: 'Ужин при свечах с мастер-классом повара',  meta: '3 200 ₽ · 2.5 часа' },
-];
-
-// Ваши идеи: GET /api/ideas?isUserCreated=true
-const STUB_MY_IDEAS = [
-    { id: 107, emoji: '🌁', bg: 'linear-gradient(135deg,#1A1A1A,#383838)', title: 'Прогулка по крышам с термосом чая',        meta: 'Бесплатно · 1.5 часа' },
-    { id: 108, emoji: '🔭', bg: 'linear-gradient(135deg,#0A0A1A,#1A1A38)', title: 'Ночная экскурсия в планетарий',             meta: '600 ₽ · 2 часа' },
-];
-
-// ── Хелперы ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatPrice(p) {
+    if (!p) return 'Бесплатно';
+    return `от ${Number(p).toLocaleString('ru-RU')} ₽`;
+}
+function formatDuration(min) {
+    if (!min) return null;
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? `${h} ч ${m} мин` : `${h} ч`;
+}
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -32,7 +23,6 @@ function formatDate(dateStr) {
         'июля','августа','сентября','октября','ноября','декабря'];
     return `${d.getDate()} ${months[d.getMonth()]}`;
 }
-
 function formatWeekday(dateStr) {
     if (!dateStr) return '';
     const days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
@@ -44,7 +34,7 @@ function todayISO() {
 }
 
 const TABS = [
-    { key: 'matches', label: 'Совпадения', badge: 2 },
+    { key: 'matches', label: 'Совпадения' },
     { key: 'saved',   label: 'Сохранённое' },
     { key: 'mine',    label: 'Ваши идеи' },
 ];
@@ -56,6 +46,29 @@ export default function DateModePage({ mode }) {
 
     // Planned: selected date
     const [selectedDate, setSelectedDate] = useState(todayISO);
+
+    // Data
+    const [matches,   setMatches]   = useState([]);
+    const [savedIdeas, setSavedIdeas] = useState([]);
+    const [myIdeas,   setMyIdeas]   = useState([]);
+    const [dataLoading, setDataLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        setDataLoading(true);
+        Promise.all([
+            getMatches().catch(() => []),
+            getSavedIdeas().catch(() => []),
+            getMyIdeas({ size: 20 }).catch(() => ({ content: [] })),
+        ]).then(([matchesData, savedData, myIdeasPage]) => {
+            if (cancelled) return;
+            setMatches(matchesData);
+            setSavedIdeas(savedData);
+            setMyIdeas(myIdeasPage.content || []);
+            setDataLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, []);
 
     // Tabs
     const [activeTab, setActiveTab] = useState(0);
@@ -230,7 +243,9 @@ export default function DateModePage({ mode }) {
                         onClick={() => setActiveTab(i)}
                     >
                         {tab.label}
-                        {tab.badge && <span className="dm-tab-badge">{tab.badge}</span>}
+                        {tab.key === 'matches' && matches.length > 0 && (
+                            <span className="dm-tab-badge">{matches.length}</span>
+                        )}
                     </div>
                 ))}
                 <div className="dm-tab-indicator" style={indStyle} />
@@ -248,14 +263,21 @@ export default function DateModePage({ mode }) {
                     {/* PANE 0 — Совпадения */}
                     <div className="dm-swipe-pane">
                         <div className="dm-pane-sub">Вам с партнёром понравилось</div>
-                        {STUB_MATCHES.length > 0 ? (
+                        {dataLoading ? (
+                            <div className="dm-empty">
+                                <div className="dm-empty-emoji">⏳</div>
+                                <div className="dm-empty-title">Загружаем…</div>
+                            </div>
+                        ) : matches.length > 0 ? (
                             <>
-                                {STUB_MATCHES.map(m => (
-                                    <div key={m.id} className="dm-match-card" onClick={() => goToIdea(m.id)}>
-                                        <div className="dm-card-img" style={{ background: m.bg }}>{m.emoji}</div>
+                                {matches.map(m => (
+                                    <div key={m.id} className="dm-match-card" onClick={() => goToIdea(m.ideaId)}>
+                                        <div className="dm-card-img"
+                                             style={{ background: categoryGradient(m.ideaCategory) }}>
+                                            {categoryEmoji(m.ideaCategory)}
+                                        </div>
                                         <div className="dm-card-body">
-                                            <div className="dm-card-title">{m.title}</div>
-                                            <div className="dm-card-meta">{m.meta}</div>
+                                            <div className="dm-card-title">{m.ideaTitle}</div>
                                         </div>
                                     </div>
                                 ))}
@@ -275,20 +297,33 @@ export default function DateModePage({ mode }) {
 
                     {/* PANE 1 — Сохранённое */}
                     <div className="dm-swipe-pane">
-                        <div className="dm-pane-sub">Идеи, которые вы сохранили</div>
-                        {STUB_SAVED.length > 0 ? (
+                        <div className="dm-pane-sub">Идеи, которые вам понравились</div>
+                        {dataLoading ? (
+                            <div className="dm-empty">
+                                <div className="dm-empty-emoji">⏳</div>
+                                <div className="dm-empty-title">Загружаем…</div>
+                            </div>
+                        ) : savedIdeas.length > 0 ? (
                             <>
-                                {STUB_SAVED.map(s => (
-                                    <div key={s.id} className="dm-idea-card" onClick={() => goToIdea(s.id)}>
-                                        <div className="dm-card-img" style={{ background: s.bg }}>{s.emoji}</div>
+                                {savedIdeas.map(idea => (
+                                    <div key={idea.id} className="dm-idea-card" onClick={() => goToIdea(idea.id)}>
+                                        <div className="dm-card-img"
+                                             style={{ background: categoryGradient(idea.category) }}>
+                                            {categoryEmoji(idea.category)}
+                                        </div>
                                         <div className="dm-card-body">
-                                            <div className="dm-card-title">{s.title}</div>
-                                            <div className="dm-card-meta">{s.meta}</div>
+                                            <div className="dm-card-title">{idea.title}</div>
+                                            <div className="dm-card-meta">
+                                                {[
+                                                    idea.priceFrom ? formatPrice(idea.priceFrom) : 'Бесплатно',
+                                                    idea.durationMin ? formatDuration(idea.durationMin) : null,
+                                                ].filter(Boolean).join(' · ')}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
                                 <button className="dm-see-all" onClick={() => navigate('/ideas/feed')}>
-                                    Всё сохранённое
+                                    Все сохранённые
                                     <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                                 </button>
                             </>
@@ -304,19 +339,32 @@ export default function DateModePage({ mode }) {
                     {/* PANE 2 — Ваши идеи */}
                     <div className="dm-swipe-pane">
                         <div className="dm-pane-sub">Идеи, которые вы создали</div>
-                        {STUB_MY_IDEAS.length > 0 ? (
+                        {dataLoading ? (
+                            <div className="dm-empty">
+                                <div className="dm-empty-emoji">⏳</div>
+                                <div className="dm-empty-title">Загружаем…</div>
+                            </div>
+                        ) : myIdeas.length > 0 ? (
                             <>
-                                {STUB_MY_IDEAS.map(m => (
-                                    <div key={m.id} className="dm-idea-card" onClick={() => goToIdea(m.id)}>
-                                        <div className="dm-card-img" style={{ background: m.bg }}>{m.emoji}</div>
+                                {myIdeas.map(idea => (
+                                    <div key={idea.id} className="dm-idea-card" onClick={() => goToIdea(idea.id)}>
+                                        <div className="dm-card-img"
+                                             style={{ background: categoryGradient(idea.category) }}>
+                                            {categoryEmoji(idea.category)}
+                                        </div>
                                         <div className="dm-card-body">
-                                            <div className="dm-card-title">{m.title}</div>
-                                            <div className="dm-card-meta">{m.meta}</div>
+                                            <div className="dm-card-title">{idea.title}</div>
+                                            <div className="dm-card-meta">
+                                                {[
+                                                    idea.priceFrom ? formatPrice(idea.priceFrom) : 'Бесплатно',
+                                                    idea.durationMin ? formatDuration(idea.durationMin) : null,
+                                                ].filter(Boolean).join(' · ')}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
-                                <button className="dm-see-all" onClick={() => navigate('/ideas/create')}>
-                                    + Создать идею
+                                <button className="dm-see-all" onClick={() => navigate('/ideas/feed')}>
+                                    Все ваши идеи
                                     <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                                 </button>
                             </>

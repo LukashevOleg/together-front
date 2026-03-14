@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getIdeaById } from '../../api/ideaApi';
+import { getIdeaById, saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
 import { createDateEvent } from '../../api/datingApi';
-import { getMyProfile } from '../../api/profilerApi';
+import { getPartner } from '../../api/profilerApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './IdeaDetailPage.css';
 
@@ -174,13 +174,13 @@ export default function IdeaDetailPage() {
         setLoading(true);
         Promise.all([
             getIdeaById(id),
-            getMyProfile().catch(() => null),
-        ]).then(([ideaData, profile]) => {
+            getPartner().catch(() => null),
+            getSaveStatus(id).catch(() => ({ saved: false })),
+        ]).then(([ideaData, partner, savedStatus]) => {
             if (cancelled) return;
             setIdea(ideaData);
-            // partnerId пока не хранится в профиле напрямую — придёт через getPartner()
-            // Используем profile.partnerId если бэк его добавит, пока null
-            setPartnerId(profile?.partnerId ?? null);
+            setPartnerId(partner?.id ?? null);
+            setSaved(savedStatus.saved);
             setLoading(false);
         }).catch(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
@@ -188,9 +188,22 @@ export default function IdeaDetailPage() {
 
     const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2400); };
 
-    const handleSave = () => {
-        setSaved(s => !s);
-        showToast(saved ? 'Убрано из сохранённых' : 'Сохранено ❤️');
+    const handleSave = async () => {
+        if (!idea) return;
+        const newSaved = !saved;
+        setSaved(newSaved); // оптимистично
+        try {
+            if (newSaved) {
+                await saveIdea(Number(id), idea.title, idea.category);
+                showToast('Сохранено ❤️');
+            } else {
+                await unsaveIdea(Number(id));
+                showToast('Убрано из сохранённых');
+            }
+        } catch {
+            setSaved(!newSaved); // откатываем при ошибке
+            showToast('Ошибка, попробуйте ещё раз');
+        }
     };
 
     const handleInviteClick = () => {

@@ -191,6 +191,17 @@
     z-index: 1;
 }
 .dm-tab.active { color: #7B1E2E; font-weight: 500; }
+.dm-tab-badge {
+    display: inline-block;
+    background: #7B1E2E;
+    color: #fff;
+    font-size: 10px;
+    border-radius: 20px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    font-weight: 500;
+    vertical-align: middle;
+}
 .dm-tab-indicator {
     position: absolute;
     bottom: 0;
@@ -219,6 +230,8 @@
     overflow-y: auto;
     scrollbar-width: none;
     padding-bottom: 16px;
+    display: flex;
+    flex-direction: column;
 }
 .dm-swipe-pane::-webkit-scrollbar { display: none; }
 
@@ -282,7 +295,8 @@
 
 /* See all button */
 .dm-see-all {
-    margin: 6px 20px 0;
+    margin: auto 20px 0;    /* auto верх прижимает к низу */
+    padding-top: 24px;      /* отступ от последней карточки */
     background: #fff;
     border: 1.5px solid #E5E3E0;
     border-radius: 14px;
@@ -293,6 +307,10 @@
     width: calc(100% - 40px);
     display: flex; align-items: center; justify-content: center;
     gap: 6px;
+    margin-top: auto;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;    /* отступ от нижнего бара */
 }
 .dm-see-all svg { width: 14px; height: 14px; stroke: #888; fill: none; stroke-width: 2; }
 

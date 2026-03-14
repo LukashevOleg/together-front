@@ -71,6 +71,15 @@ export async function getUpcomingDates() {
     return data; // DateEventDto.Response[]
 }
 
+/**
+ * Все активные события для чат-листа: PENDING (обсуждение) + ACCEPTED (принятые).
+ * Главный источник данных для ChatsPage.
+ */
+export async function getActiveChats() {
+    const { data } = await api.get('/api/dates/chats');
+    return data; // DateEventDto.Response[]
+}
+
 /** История прошедших свиданий */
 export async function getDateHistory() {
     const { data } = await api.get('/api/dates/history');

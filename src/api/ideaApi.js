@@ -64,3 +64,38 @@ export async function getIdeaById(id) {
 export async function deleteIdea(id) {
     await api.delete(`/api/ideas/${id}`);
 }
+
+// ── Save / Like ───────────────────────────────────────────────────────────
+
+/** Лайкнуть идею. Возвращает { saved: true, savesCount: N } */
+export async function saveIdea(ideaId) {
+    const { data } = await api.post(`/api/ideas/${ideaId}/save`);
+    return data;
+}
+
+/** Убрать лайк. Возвращает { saved: false, savesCount: N } */
+export async function unsaveIdea(ideaId) {
+    const { data } = await api.delete(`/api/ideas/${ideaId}/save`);
+    return data;
+}
+
+/** Статус лайка. Возвращает { saved: boolean, savesCount: N } */
+export async function getSaveStatus(ideaId) {
+    const { data } = await api.get(`/api/ideas/${ideaId}/save`);
+    return data;
+}
+
+/** Список всех лайкнутых идей пользователя */
+export async function getSavedIdeas() {
+    const { data } = await api.get('/api/ideas/saved');
+    return data; // IdeaDto.Summary[]
+}
+
+/** Свои идеи (созданные текущим пользователем) */
+export async function getMyIdeas(params = {}) {
+    const query = new URLSearchParams();
+    if (params.page != null) query.set('page', params.page);
+    if (params.size != null) query.set('size', params.size);
+    const { data } = await api.get(`/api/ideas/mine?${query}`);
+    return data; // PageResponse<IdeaDto.Summary>
+}

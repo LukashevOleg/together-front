@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPartner, getProfileById, removePartner } from '../../api/profilerApi';
 import { getMatches }     from '../../api/swipesApi';
 import { getDateHistory } from '../../api/datingApi';
-import { categoryEmoji, categoryGradient, formatEventDate } from '../../api/datingApi';
+import { categoryEmoji, categoryGradient } from '../../api/datingApi';
 import './PartnerProfilePage.css';
 
 // ── Helpers ────────────────────────────────────────────────────────────────

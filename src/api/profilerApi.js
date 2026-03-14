@@ -82,6 +82,34 @@ export async function acceptInvite(code) {
     return data;
 }
 
+// ── Saved ideas ───────────────────────────────────────────────────────────
+
+/** Сохранить идею. Возвращает { saved: true } */
+export async function saveIdea(ideaId, ideaTitle, ideaCategory) {
+    const { data } = await api.post('/api/saved-ideas', {
+        ideaId, ideaTitle, ideaCategory,
+    });
+    return data; // { saved: boolean }
+}
+
+/** Убрать идею из сохранённых. Возвращает { saved: false } */
+export async function unsaveIdea(ideaId) {
+    const { data } = await api.delete(`/api/saved-ideas/${ideaId}`);
+    return data;
+}
+
+/** Проверить — сохранена ли идея текущим пользователем */
+export async function getIdeaSavedStatus(ideaId) {
+    const { data } = await api.get(`/api/saved-ideas/${ideaId}/status`);
+    return data.saved; // boolean
+}
+
+/** Все сохранённые идеи пользователя */
+export async function getSavedIdeas() {
+    const { data } = await api.get('/api/saved-ideas');
+    return data; // SavedIdeaDto.Response[]
+}
+
 /** Разорвать связь с партнёром */
 export async function removePartner() {
     await api.delete('/api/partner');
