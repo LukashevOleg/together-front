@@ -254,8 +254,11 @@ export default function SwipePage() {
     const back1Ref = useRef(null);
     const back2Ref = useRef(null);
 
-    // Актуальный город в ref — чтобы handleSwipe не устаревал
-    const cityRef = useRef('Москва');
+    // Актуальный город в ref
+    const cityRef    = useRef('Москва');
+    // Полный сет ВСЕХ ideaId которые уже были показаны в этой сессии.
+    // Фильтруем локально — надёжнее чем полагаться на курсор при дырявых id.
+    const seenIdsRef = useRef(new Set());
 
     // Один эффект инициализации: профиль → город → лента
     useEffect(() => {
@@ -274,10 +277,13 @@ export default function SwipePage() {
             setCity(resolvedCity);
             cityRef.current = resolvedCity;
 
-            // Загружаем ленту только один раз, уже зная город
             try {
                 const feed = await getSwipeFeed(resolvedCity);
-                if (!cancelled) setCards(feed.items || []);
+                if (!cancelled) {
+                    const items = (feed.items || []).filter(c => !seenIdsRef.current.has(c.ideaId));
+                    items.forEach(c => seenIdsRef.current.add(c.ideaId));
+                    setCards(items);
+                }
             } catch (e) {
                 console.error('Feed load failed', e);
             } finally {
@@ -286,26 +292,26 @@ export default function SwipePage() {
         });
 
         return () => { cancelled = true; };
-    }, []); // пустой массив — только при маунте
+    }, []);
 
-    // Дозагрузка следующей пачки (вызывается вручную, не через useEffect)
+    // Дозагрузка — фильтруем всё что уже видели локально
     const loadFeed = useCallback(async () => {
         const currentCity = cityRef.current;
-        setLoading(true);
+        // Передаём максимальный из seen как afterId — подсказка бэку откуда читать
+        const maxSeen = seenIdsRef.current.size > 0
+            ? Math.max(...seenIdsRef.current)
+            : null;
         try {
-            const feed = await getSwipeFeed(currentCity);
-            setCards(prev => {
-                // Добавляем только те карточки которых ещё нет
-                const existing = new Set(prev.map(c => c.ideaId));
-                const fresh = (feed.items || []).filter(c => !existing.has(c.ideaId));
-                return [...prev, ...fresh];
-            });
+            const feed = await getSwipeFeed(currentCity, maxSeen);
+            const fresh = (feed.items || []).filter(c => !seenIdsRef.current.has(c.ideaId));
+            if (fresh.length > 0) {
+                fresh.forEach(c => seenIdsRef.current.add(c.ideaId));
+                setCards(prev => [...prev, ...fresh]);
+            }
         } catch (e) {
             console.error('Feed load failed', e);
-        } finally {
-            setLoading(false);
         }
-    }, []); // нет зависимостей — cityRef.current читается в момент вызова
+    }, []);
 
     // ── Обработка свайпа ──────────────────────────────────────────────────
     const handleSwipe = useCallback(async (action) => {
@@ -386,26 +392,7 @@ export default function SwipePage() {
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div className="sw-top-title">Сов<span>падения</span></div>
-                <div className="sw-counter">
-                    {loading ? '…' : cards.length > 0 ? `${cards.length} идей` : 'Всё!'}
-                </div>
-            </div>
-
-            {/* PARTNER STRIP */}
-            <div className="sw-partner-strip">
-                <div className="sw-p-item">
-                    <div className="sw-p-ava me">
-                        {myProfile?.avatarUrl ? <img src={myProfile.avatarUrl} alt="me" /> : '🐻'}
-                    </div>
-                    <div className="sw-p-name">Вы</div>
-                </div>
-                <div className="sw-p-heart">💝</div>
-                <div className="sw-p-item">
-                    <div className="sw-p-ava her">
-                        {partnerProfile?.avatarUrl ? <img src={partnerProfile.avatarUrl} alt="partner" /> : '🌸'}
-                    </div>
-                    <div className="sw-p-name">{partnerProfile?.name || 'Партнёр'}</div>
-                </div>
+                <div style={{ width: 34 }} />
             </div>
 
             {/* CARD STACK */}
@@ -439,24 +426,7 @@ export default function SwipePage() {
                 </div>
             )}
 
-            {/* HINT */}
-            {!loading && cards.length > 0 && (
-                <div className="sw-hint">
-                    <div className="sw-hint-item">
-                        <div className="sw-hint-icon nope">✕</div>
-                        <span>Не для нас</span>
-                    </div>
-                    <div className="sw-hint-dot" />
-                    <span style={{ fontSize: 11, color: '#888' }}>свайпайте карточки</span>
-                    <div className="sw-hint-dot" />
-                    <div className="sw-hint-item">
-                        <span>Хотим!</span>
-                        <div className="sw-hint-icon like">💝</div>
-                    </div>
-                </div>
-            )}
-
-            <BottomNav onCreateClick={() => navigate('/ideas/create')} />
+            <BottomNav />
 
             {/* LOCATION SHEET */}
             {locItem && <LocationSheet item={locItem} onClose={() => setLocItem(null)} />}

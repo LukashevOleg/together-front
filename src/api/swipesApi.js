@@ -2,11 +2,14 @@ import api from './authApi';
 
 /**
  * Получить пачку идей для свайпа в конкретном городе.
- * Курсор вычисляется на сервере автоматически.
+ * @param {string} city
+ * @param {number|null} afterId — если передан, бэк вернёт только идеи с id > afterId (локальный курсор сессии)
  * @returns FeedResponse { items: FeedItem[], cursor: number, restarted: boolean }
  */
-export async function getSwipeFeed(city) {
-    const { data } = await api.get('/api/swipes/feed', { params: { city } });
+export async function getSwipeFeed(city, afterId = null) {
+    const params = { city };
+    if (afterId != null) params.afterId = afterId;
+    const { data } = await api.get('/api/swipes/feed', { params });
     return data;
 }
 

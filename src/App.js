@@ -17,6 +17,8 @@ import IdeaDetailPage    from './pages/ideaDetailPage/IdeaDetailPage';
 import DateModePage     from './pages/dateModePage/DateModePage';
 import SwipePage        from './pages/swipePage/SwipePage';
 import CalendarPage     from './pages/calendarPage/CalendarPage';
+import MatchesPage      from './pages/matchesPage/MatchesPage';
+import InvitationsPage  from './pages/invitationsPage/InvitationsPage';
 
 import './styles/globals.css';
 
@@ -51,10 +53,11 @@ function AppRoutes() {
             <Route path="/ideas/feed"   element={<PrivateRoute><IdeasFeedPage /></PrivateRoute>} />
             <Route path="/ideas/create" element={<PrivateRoute><CreateIdeaPage /></PrivateRoute>} />
             <Route path="/lubimka"      element={<PrivateRoute><LubimkaPage /></PrivateRoute>} />
-            <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
             <Route path="/spontaneous"  element={<PrivateRoute><DateModePage mode="spontaneous" /></PrivateRoute>} />
             <Route path="/planned"      element={<PrivateRoute><DateModePage mode="planned" /></PrivateRoute>} />
             <Route path="/swipe"        element={<PrivateRoute><SwipePage /></PrivateRoute>} />
+            <Route path="/matches"      element={<PrivateRoute><MatchesPage /></PrivateRoute>} />
+            <Route path="/invitations"  element={<PrivateRoute><InvitationsPage /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
             <Route path="/calendar"     element={<PrivateRoute><CalendarPage /></PrivateRoute>} />
             <Route path="/ideas/:id"    element={<PrivateRoute><IdeaDetailPage /></PrivateRoute>} />

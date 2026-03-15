@@ -1,21 +1,21 @@
 .bottom-nav {
-    background: var(--white);
-    border-top: 1px solid var(--border);
-    padding: 12px 20px 28px;
+    background: #fff;
+    border-top: 1px solid #E5E3E0;
+    padding: 10px 12px 28px;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    flex-shrink: 0;
     position: sticky;
     bottom: 0;
-    z-index: 10;
+    z-index: 100;
+    flex-shrink: 0;
 }
 
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     cursor: pointer;
     flex: 1;
 }
@@ -31,38 +31,49 @@
 .nav-icon svg {
     width: 22px;
     height: 22px;
-    stroke: var(--text-muted);
+    stroke: #888;
     fill: none;
     stroke-width: 1.8;
 }
 
-.nav-item.active .nav-icon svg { stroke: var(--burgundy); }
-.nav-item.active .nav-label    { color: var(--burgundy); }
+.nav-item.active .nav-icon svg { stroke: #7B1E2E; }
+.nav-item.active .nav-label    { color: #7B1E2E; }
 
 .nav-label {
     font-size: 10px;
-    color: var(--text-muted);
+    color: #888;
     font-weight: 400;
 }
 
+/* Центральная кнопка свайпов — прямоугольная с радиусом */
 .nav-center-btn {
     flex: 0 0 52px;
     width: 52px;
     height: 52px;
-    background: var(--burgundy);
-    border-radius: 50%;
+    background: #7B1E2E;
+    border-radius: 15px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     margin-top: -18px;
-    box-shadow: 0 4px 16px rgba(123,30,46,0.35);
+    box-shadow: 0 4px 16px rgba(123,30,46,0.45);
     cursor: pointer;
 }
 
 .nav-center-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 19px;
+    height: 19px;
     stroke: #fff;
     fill: none;
     stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.nav-center-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
 }

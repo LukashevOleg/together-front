@@ -13,6 +13,7 @@ import {
     categoryGradient,
 } from '../../api/datingApi';
 import { createChatSocket } from '../../api/chatSocket';
+import BottomNav from '../../components/layout/BottomNav';
 import './ChatsPage.css';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -109,72 +110,73 @@ function PendingBanner({ event, userId }) {
     );
 }
 
+// ── Status badge ───────────────────────────────────────────────────────────
+function StatusBadge({ status }) {
+    const map = {
+        PENDING:   { text: '⏳ Ожидает ответа',  cls: 'pending'   },
+        ACCEPTED:  { text: '✅ Идём!',            cls: 'accepted'  },
+        DECLINED:  { text: '❌ Отклонено',        cls: 'declined'  },
+        CANCELLED: { text: '🚫 Отменено',         cls: 'cancelled' },
+        COMPLETED: { text: '🎉 Состоялось',       cls: 'completed' },
+    };
+    const s = map[status] || map.PENDING;
+    return <span className={`ch-status-badge ch-status-badge--${s.cls}`}>{s.text}</span>;
+}
+
 // ── ChatScreen ─────────────────────────────────────────────────────────────
-function ChatScreen({ event: initialEvent, userId, onClose }) {
-    const [event,    setEvent]    = useState(initialEvent);
-    const [messages, setMessages] = useState([]);
-    const [inputText,setInputText]= useState('');
-    const [connected,setConnected]= useState(false);
-    const [loading,  setLoading]  = useState(true);
-    const clientRef  = useRef(null);
-    const bottomRef  = useRef(null);
+function ChatScreen({ event: initialEvent, userId, onClose, from }) {
+    const navigate = useNavigate();
+
+    const [event,       setEvent]      = useState(initialEvent);
+    const [messages,    setMessages]   = useState([]);
+    const [inputText,   setInputText]  = useState('');
+    const [connected,   setConnected]  = useState(false);
+    const [loading,     setLoading]    = useState(true);
+    const [editingId,   setEditingId]  = useState(null); // id редактируемого сообщения
+    const [editText,    setEditText]   = useState('');
+    const clientRef   = useRef(null);
+    const bottomRef   = useRef(null);
+    const setEventRef = useRef(setEvent);
+    useEffect(() => { setEventRef.current = setEvent; }, [setEvent]);
 
     const scrollToBottom = useCallback(() => {
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
     }, []);
 
-    // 1. Загрузить историю
+    // Загрузить историю
     useEffect(() => {
         setLoading(true);
         getChatHistory(event.id)
-            .then(history => {
-                setMessages(history);
-                setLoading(false);
-                scrollToBottom();
-            })
+            .then(history => { setMessages(history); setLoading(false); scrollToBottom(); })
             .catch(() => setLoading(false));
     }, [event.id, scrollToBottom]);
 
-    // 2. WebSocket
+    // WebSocket
     useEffect(() => {
         const client = createChatSocket({
             eventId: event.id,
             userId,
             onMessage: (msg) => {
                 setMessages(prev => {
-                    // Дедупликация: если уже есть сообщение с таким id — пропускаем
                     if (prev.some(m => m.id === msg.id)) return prev;
-                    // Заменяем оптимистичное сообщение реальным (совпадение по контенту + отправитель)
                     const optIdx = prev.findIndex(
                         m => String(m.id).startsWith('opt-')
                             && m.senderId === msg.senderId
                             && m.content  === msg.content
                     );
                     if (optIdx !== -1) {
-                        const next = [...prev];
-                        next[optIdx] = msg; // подменяем opt- на реальный с числовым id
-                        return next;
+                        const next = [...prev]; next[optIdx] = msg; return next;
                     }
                     return [...prev, msg];
                 });
                 scrollToBottom();
             },
             onSystemEvent: (evt) => {
-                // Обновляем статус события — это единственный источник правды для обоих участников
-                if (evt.eventType) {
-                    setEvent(prev => ({ ...prev, status: evt.eventType }));
-                }
+                if (evt.eventType) setEventRef.current(prev => ({ ...prev, status: evt.eventType }));
                 setMessages(prev => {
-                    // Не дублируем системные сообщения с одинаковым текстом подряд
                     const last = prev[prev.length - 1];
                     if (last?.type === 'SYSTEM' && last?.content === evt.text) return prev;
-                    return [...prev, {
-                        id:        `sys-${Date.now()}`,
-                        senderId:  0,
-                        content:   evt.text,
-                        type:      'SYSTEM',
-                        createdAt: evt.createdAt,
-                    }];
+                    return [...prev, { id: `sys-${Date.now()}`, senderId: 0, content: evt.text, type: 'SYSTEM', createdAt: evt.createdAt }];
                 });
                 scrollToBottom();
             },
@@ -190,13 +192,9 @@ function ChatScreen({ event: initialEvent, userId, onClose }) {
         const text = inputText.trim();
         if (!text || !connected) return;
         const optimistic = {
-            id: `opt-${Date.now()}`,
-            dateEventId: event.id,
-            senderId: userId,
-            content: text,
-            type: 'TEXT',
-            isRead: false,
-            createdAt: new Date().toISOString(),
+            id: `opt-${Date.now()}`, dateEventId: event.id,
+            senderId: userId, content: text, type: 'TEXT',
+            isRead: false, createdAt: new Date().toISOString(),
         };
         setMessages(prev => [...prev, optimistic]);
         setInputText('');
@@ -204,39 +202,67 @@ function ChatScreen({ event: initialEvent, userId, onClose }) {
         clientRef.current?.sendText(text);
     };
 
-    const handleStatusChange = (updated) => {
-        // Обновляем статус события локально — баннер перерисуется
-        setEvent(updated);
+    // Редактирование — локально (TODO: добавить WS-событие edit на бэке)
+    const startEdit = (msg) => {
+        if (msg.senderId !== userId) return;
+        setEditingId(msg.id);
+        setEditText(msg.content);
+    };
+    const confirmEdit = () => {
+        if (!editText.trim()) return;
+        setMessages(prev => prev.map(m =>
+            m.id === editingId ? { ...m, content: editText.trim(), edited: true } : m
+        ));
+        setEditingId(null);
+        setEditText('');
+    };
+    const cancelEdit = () => { setEditingId(null); setEditText(''); };
+
+    // Кнопка назад — если пришли из Lubimka, возвращаемся туда
+    const handleBack = () => {
+        if (from === 'lubimka') { navigate('/lubimka'); }
+        else { onClose(); }
     };
 
     const bg    = categoryGradient(event.ideaCategory);
     const emoji = categoryEmoji(event.ideaCategory);
-    const isPending = event.status === 'PENDING';
+    // Hint — подсказка при сюрпризе
+    const hint  = event.hint;
 
     return (
         <div className="ch-screen open">
-            <div className="ch-screen-status">
-                <span>9:41</span>
-            </div>
+            <div className="ch-screen-status"><span>9:41</span></div>
 
             <div className="ch-topbar">
-                <button className="ch-btn-back" onClick={onClose}>
+                <button className="ch-btn-back" onClick={handleBack}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div className="ch-topbar-ava" style={{ background: bg }}>{emoji}</div>
                 <div className="ch-topbar-info">
                     <div className="ch-topbar-title">{event.ideaTitle}</div>
-                    <div className={`ch-topbar-sub ${isPending ? 'ch-topbar-sub--pending' : ''}`}>
-                        {isPending ? '⏳ Ожидает ответа' : formatEventDate(event)}
-                        {!connected && <span style={{ color: '#888' }}> · подключение…</span>}
+                    <div className="ch-topbar-sub">
+                        <StatusBadge status={event.status} />
+                        {!connected && <span style={{ color: '#aaa', marginLeft: 6, fontSize: 10 }}>· подключение…</span>}
                     </div>
                 </div>
             </div>
 
-            {/* Баннер приглашения — только для получателя когда PENDING */}
-            <InviteBanner event={event} userId={userId} onStatusChange={handleStatusChange} />
+            {/* Закреплённый комментарий при приглашении */}
+            {(hint || event.status === 'PENDING') && (
+                <div className="ch-pinned">
+                    <div className="ch-pinned-icon">📌</div>
+                    <div className="ch-pinned-body">
+                        <div className="ch-pinned-label">Комментарий к приглашению</div>
+                        <div className="ch-pinned-text">
+                            {hint || formatEventDate(event)}
+                            {event.isSurprise && <span className="ch-pinned-surprise"> · 🎁 Сюрприз</span>}
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Баннер ожидания — только для отправителя когда PENDING */}
+            {/* Баннер приглашения */}
+            <InviteBanner event={event} userId={userId} onStatusChange={setEvent} />
             <PendingBanner event={event} userId={userId} />
 
             <div className="ch-messages">
@@ -255,15 +281,37 @@ function ChatScreen({ event: initialEvent, userId, onClose }) {
                                 );
                             }
                             const mine = msg.senderId === userId;
+                            const isEditing = editingId === msg.id;
                             return (
                                 <div key={msg.id ?? i} className={`ch-bubble-row ${mine ? 'mine' : ''}`}>
                                     <div className={`ch-b-ava ${mine ? 'me' : 'her'}`}>
                                         {mine ? '🐻' : '🌸'}
                                     </div>
                                     <div>
-                                        <div className={`ch-bubble ${mine ? 'mine' : 'theirs'}`}>
-                                            {msg.content}
-                                        </div>
+                                        {isEditing ? (
+                                            <div className="ch-edit-wrap">
+                                                <input
+                                                    className="ch-edit-input"
+                                                    value={editText}
+                                                    onChange={e => setEditText(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') confirmEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                                                    autoFocus
+                                                />
+                                                <div className="ch-edit-actions">
+                                                    <button className="ch-edit-btn save" onClick={confirmEdit}>Сохранить</button>
+                                                    <button className="ch-edit-btn cancel" onClick={cancelEdit}>Отмена</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className={`ch-bubble ${mine ? 'mine' : 'theirs'}`}
+                                                onDoubleClick={() => mine && startEdit(msg)}
+                                                title={mine ? 'Двойной клик — редактировать' : ''}
+                                            >
+                                                {msg.content}
+                                                {msg.edited && <span className="ch-edited">изменено</span>}
+                                            </div>
+                                        )}
                                         <div className="ch-b-time">{fmtTime(msg.createdAt)}</div>
                                     </div>
                                 </div>
@@ -274,6 +322,7 @@ function ChatScreen({ event: initialEvent, userId, onClose }) {
                 )}
             </div>
 
+            {/* Строка ввода */}
             <div className="ch-input-row">
                 <input
                     className="ch-input"
@@ -301,8 +350,10 @@ export default function ChatsPage() {
 
     const [events,      setEvents]      = useState([]);
     const [unreadMap,   setUnreadMap]   = useState({});
+    const [lastMsgs,    setLastMsgs]    = useState({}); // eventId → last message text
     const [loading,     setLoading]     = useState(true);
     const [activeEvent, setActiveEvent] = useState(null);
+    const [from,        setFrom]        = useState(null);
 
     // Загружаем все активные чаты (PENDING + ACCEPTED)
     useEffect(() => {
@@ -313,11 +364,18 @@ export default function ChatsPage() {
                 if (cancelled) return;
                 setEvents(data);
                 setLoading(false);
-                // Счётчики непрочитанных
+                // Счётчики непрочитанных + последние сообщения для превью
                 data.forEach(ev => {
                     getUnreadCount(ev.id)
                         .then(count => {
                             if (!cancelled) setUnreadMap(prev => ({ ...prev, [ev.id]: count }));
+                        })
+                        .catch(() => {});
+                    getChatHistory(ev.id)
+                        .then(msgs => {
+                            if (cancelled) return;
+                            const last = msgs.filter(m => m.type !== 'SYSTEM').pop();
+                            if (last) setLastMsgs(prev => ({ ...prev, [ev.id]: last.content }));
                         })
                         .catch(() => {});
                 });
@@ -326,17 +384,55 @@ export default function ChatsPage() {
         return () => { cancelled = true; };
     }, []);
 
-    // Автооткрытие чата если пришли с state.eventId (после создания приглашения)
+    // Реалтайм: WS-подписки на все чаты для мгновенного обновления превью
+    useEffect(() => {
+        if (events.length === 0 || !userId) return;
+
+        const sockets = events.map(ev => {
+            const client = createChatSocket({
+                eventId: ev.id,
+                userId,
+                onMessage: (msg) => {
+                    if (msg.type === 'SYSTEM') return;
+                    // Обновляем последнее сообщение в превью
+                    setLastMsgs(prev => ({ ...prev, [ev.id]: msg.content }));
+                    // Не считаем unread если этот чат сейчас открыт
+                    setActiveEvent(current => {
+                        if (current?.id !== ev.id) {
+                            setUnreadMap(prev => ({ ...prev, [ev.id]: (prev[ev.id] || 0) + 1 }));
+                        }
+                        return current;
+                    });
+                },
+                onSystemEvent: (evt) => {
+                    // Обновляем статус события в списке если пришло системное
+                    if (evt.eventType) {
+                        setEvents(prev => prev.map(e =>
+                            e.id === ev.id ? { ...e, status: evt.eventType } : e
+                        ));
+                    }
+                },
+            });
+            client.activate();
+            return client;
+        });
+
+        return () => sockets.forEach(c => c.deactivate());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [events.length, userId]);
+
+    // Автооткрытие чата если пришли с state.eventId
     useEffect(() => {
         if (state?.eventId && events.length > 0) {
             const ev = events.find(e => e.id === state.eventId);
-            if (ev) openChat(ev);
+            if (ev) openChat(ev, state?.from);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state, events]);
 
-    const openChat = (event) => {
+    const openChat = (event, fromSource = null) => {
         setActiveEvent(event);
+        setFrom(fromSource);
         setUnreadMap(prev => ({ ...prev, [event.id]: 0 }));
         markChatRead(event.id).catch(() => {});
     };
@@ -360,11 +456,7 @@ export default function ChatsPage() {
             </div>
 
             <div className="ch-top-bar">
-                <button className="ch-btn-back" onClick={() => navigate(-1)}>
-                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
                 <div className="ch-top-title">Чаты <span>свиданий</span></div>
-                <div style={{ width: 34 }} />
             </div>
 
             <div className="ch-scroll">
@@ -389,7 +481,8 @@ export default function ChatsPage() {
                             <>
                                 <div className="ch-date-label">Ожидают ответа</div>
                                 {pendingEvents.map(event => {
-                                    const unread = unreadMap[event.id] || 0;
+                                    const unread  = unreadMap[event.id] || 0;
+                                    const lastMsg = lastMsgs[event.id];
                                     const isReceiver = event.receiverId === userId;
                                     return (
                                         <div key={event.id} className="ch-row ch-row--pending" onClick={() => openChat(event)}>
@@ -398,8 +491,8 @@ export default function ChatsPage() {
                                             </div>
                                             <div className="ch-info">
                                                 <div className="ch-name">{event.ideaTitle}</div>
-                                                <div className="ch-preview unread">
-                                                    {isReceiver ? '💌 Вас пригласили — откройте чтобы ответить' : '⏳ Ожидаем ответа партнёра'}
+                                                <div className="ch-preview">
+                                                    {lastMsg || (isReceiver ? '💌 Вас пригласили' : '⏳ Ожидаем ответа')}
                                                 </div>
                                             </div>
                                             <div className="ch-right">
@@ -417,7 +510,8 @@ export default function ChatsPage() {
                             <>
                                 <div className="ch-date-label">Запланированные</div>
                                 {acceptedEvents.map(event => {
-                                    const unread = unreadMap[event.id] || 0;
+                                    const unread  = unreadMap[event.id] || 0;
+                                    const lastMsg = lastMsgs[event.id];
                                     return (
                                         <div key={event.id} className="ch-row" onClick={() => openChat(event)}>
                                             <div className="ch-ava" style={{ background: categoryGradient(event.ideaCategory) }}>
@@ -426,7 +520,7 @@ export default function ChatsPage() {
                                             <div className="ch-info">
                                                 <div className="ch-name">{event.ideaTitle}</div>
                                                 <div className={`ch-preview ${unread > 0 ? 'unread' : ''}`}>
-                                                    {formatEventDate(event)}
+                                                    {lastMsg || formatEventDate(event)}
                                                 </div>
                                             </div>
                                             <div className="ch-right">
@@ -446,9 +540,12 @@ export default function ChatsPage() {
                 <ChatScreen
                     event={activeEvent}
                     userId={userId}
+                    from={from}
                     onClose={() => setActiveEvent(null)}
                 />
             )}
+
+            {!activeEvent && <BottomNav />}
         </div>
     );
 }

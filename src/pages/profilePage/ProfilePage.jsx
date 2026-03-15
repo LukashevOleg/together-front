@@ -237,7 +237,7 @@ export default function ProfilePage() {
                                 <div className="pr-field-icon muted">📱</div>
                                 <div className="pr-field-body">
                                     <div className="pr-field-lbl">Телефон</div>
-                                    <div className="pr-field-val">{user?.phone || '—'}</div>
+                                    <div className="pr-field-val">{profile?.phone || user?.phone || '—'}</div>
                                 </div>
                             </div>
                         </div>
@@ -264,7 +264,8 @@ export default function ProfilePage() {
                     </div>
 
                     {/* LOGOUT */}
-                    <button className="pr-logout-btn" onClick={handleLogout}>
+                    <div style={{ flex: 1 }} />
+                    <button className="pr-logout-btn" onClick={handleLogout} style={{ marginTop: 32, marginBottom: 24 }}>
                         <div className="pr-logout-icon">
                             <svg viewBox="0 0 24 24">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
