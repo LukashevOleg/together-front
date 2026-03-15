@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getIdeaById, saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
-import { createDateEvent } from '../../api/datingApi';
+import { createDateEvent, acceptDateEvent, declineDateEvent, cancelDateEvent } from '../../api/datingApi';
 import { getPartner } from '../../api/profilerApi';
+import { SURPRISE_IMAGE, SURPRISE_TITLE } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
 import './IdeaDetailPage.css';
 
@@ -157,8 +158,11 @@ export default function IdeaDetailPage() {
     const { state } = useLocation();
 
     // state передаётся из DateModePage: { source: 'spontaneous'|'planned', date: 'YYYY-MM-DD' }
-    const source      = state?.source;      // undefined = главная / лента
+    // или из InvitationsPage: { mode: 'incoming'|'outgoing', eventId, event }
+    const source      = state?.source;
     const plannedDate = state?.date;
+    const invMode     = state?.mode;     // 'incoming' | 'outgoing' | undefined
+    const invEventId  = state?.eventId;
 
     const [idea,      setIdea]      = useState(null);
     const [loading,   setLoading]   = useState(true);
@@ -191,7 +195,7 @@ export default function IdeaDetailPage() {
     const handleSave = async () => {
         if (!idea) return;
         const newSaved = !saved;
-        setSaved(newSaved); // оптимистично
+        setSaved(newSaved);
         try {
             if (newSaved) {
                 await saveIdea(Number(id), idea.title, idea.category);
@@ -201,9 +205,38 @@ export default function IdeaDetailPage() {
                 showToast('Убрано из сохранённых');
             }
         } catch {
-            setSaved(!newSaved); // откатываем при ошибке
+            setSaved(!newSaved);
             showToast('Ошибка, попробуйте ещё раз');
         }
+    };
+
+    // Обработчики для режима приглашения (incoming/outgoing)
+    const handleAcceptInvite = async () => {
+        setSending(true);
+        try {
+            await acceptDateEvent(invEventId);
+            showToast('Приглашение принято ✅');
+            setTimeout(() => navigate('/chats', { state: { eventId: invEventId } }), 800);
+        } catch { showToast('Ошибка'); }
+        finally { setSending(false); }
+    };
+    const handleDeclineInvite = async () => {
+        setSending(true);
+        try {
+            await declineDateEvent(invEventId);
+            showToast('Приглашение отклонено');
+            setTimeout(() => navigate('/invitations'), 800);
+        } catch { showToast('Ошибка'); }
+        finally { setSending(false); }
+    };
+    const handleCancelInvite = async () => {
+        setSending(true);
+        try {
+            await cancelDateEvent(invEventId);
+            showToast('Приглашение отменено');
+            setTimeout(() => navigate('/invitations'), 800);
+        } catch { showToast('Ошибка'); }
+        finally { setSending(false); }
     };
 
     const handleInviteClick = () => {
@@ -259,7 +292,13 @@ export default function IdeaDetailPage() {
 
     const cat    = CATEGORY_LABELS[idea.category] || {};
     const bgGrad = heroGradients[idea.category]   || heroGradients.ROMANTIC;
-    const cover  = idea.photos?.[0]?.url || idea.coverPhotoUrl || null;
+
+    // Сюрприз: получатель видит заглушку вместо настоящей карточки
+    const isSurpriseForReceiver = invMode === 'incoming' && state?.event?.isSurprise;
+    const displayTitle = isSurpriseForReceiver ? SURPRISE_TITLE : idea.title;
+    const cover = isSurpriseForReceiver
+        ? SURPRISE_IMAGE
+        : (idea.photos?.[0]?.url || idea.coverPhotoUrl || null);
 
     // Дата для модала: planned → из state, иначе сегодня
     const modalDate  = source === 'planned' ? plannedDate : todayISO();
@@ -285,7 +324,7 @@ export default function IdeaDetailPage() {
                         ? <img className="id-hero-img" src={cover} alt={idea.title} />
                         : <div className="id-hero-emoji">{cat.emoji || '💡'}</div>}
                     <div className="id-hero-gradient" />
-                    <div className="id-hero-title">{idea.title}</div>
+                    <div className="id-hero-title">{displayTitle}</div>
                     <button className="id-btn-back" onClick={() => navigate(-1)}>
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
@@ -342,17 +381,75 @@ export default function IdeaDetailPage() {
                         </>
                     )}
 
-                    <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                        {sending ? 'Отправляем…' : ctaLabel}
-                    </button>
+                    {/* CTA — зависит от режима */}
+                    {invMode === 'incoming' ? (
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button className="id-cta" style={{ flex: 1 }} onClick={handleAcceptInvite} disabled={sending}>
+                                ✅ Принять
+                            </button>
+                            <button
+                                className="id-cta"
+                                style={{ flex: 1, background: '#EBEBEB', color: '#888' }}
+                                onClick={handleDeclineInvite}
+                                disabled={sending}
+                            >
+                                Отклонить
+                            </button>
+                            <button
+                                style={{
+                                    background: '#EBEBEB', border: '1.5px solid #E5E3E0',
+                                    borderRadius: 18, padding: '0 16px',
+                                    display: 'flex', alignItems: 'center', cursor: 'pointer', flexShrink: 0,
+                                }}
+                                onClick={() => navigate('/chats', { state: { eventId: invEventId } })}
+                            >
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7B1E2E" strokeWidth="2" strokeLinecap="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    ) : invMode === 'outgoing' ? (
+                        <>
+                            {/* Пометка для сюрприза — отправитель видит нормальную карточку */}
+                            {state?.event?.isSurprise && (
+                                <div style={{
+                                    background: '#F5F1E8',
+                                    borderRadius: 14,
+                                    padding: '10px 14px',
+                                    fontSize: 12,
+                                    color: '#7A5A1A',
+                                    marginBottom: 10,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                }}>
+                                    🎁 <span>
+                    <strong>{state?.event?.receiverName || 'Партнёр'}</strong> не видит название — для них это сюрприз
+                  </span>
+                                </div>
+                            )}
+                            <button
+                                className="id-cta"
+                                style={{ background: '#EBEBEB', color: '#C0392B', border: '1.5px solid #E5E3E0' }}
+                                onClick={handleCancelInvite}
+                                disabled={sending}
+                            >
+                                {sending ? 'Отменяем…' : '🚫 Отменить приглашение'}
+                            </button>
+                        </>
+                    ) : (
+                        <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                            {sending ? 'Отправляем…' : ctaLabel}
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className={`id-toast ${toast ? 'show' : ''}`}>{toast}</div>
-            <BottomNav onCreateClick={() => navigate('/ideas/create')} />
+            <BottomNav />
 
             <InviteModal
                 open={modalOpen}

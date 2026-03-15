@@ -1,18 +1,24 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import {
     getActiveChats,
     getChatHistory,
+    getDateHistory,
     markChatRead,
     getUnreadCount,
     acceptDateEvent,
     declineDateEvent,
+    cancelDateEvent,
+    editChatMessage,
     formatEventDate,
     categoryEmoji,
     categoryGradient,
 } from '../../api/datingApi';
+import { getMyProfile, getPartner } from '../../api/profilerApi';
+import { useNotifications } from '../../context/NotificationContext';
 import { createChatSocket } from '../../api/chatSocket';
+import { getEventTitle, getEventCoverUrl, SURPRISE_IMAGE } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
 import './ChatsPage.css';
 
@@ -124,7 +130,7 @@ function StatusBadge({ status }) {
 }
 
 // ── ChatScreen ─────────────────────────────────────────────────────────────
-function ChatScreen({ event: initialEvent, userId, onClose, from }) {
+function ChatScreen({ event: initialEvent, userId, onClose, from, myProfile, partnerProfile }) {
     const navigate = useNavigate();
 
     const [event,       setEvent]      = useState(initialEvent);
@@ -158,7 +164,17 @@ function ChatScreen({ event: initialEvent, userId, onClose, from }) {
             userId,
             onMessage: (msg) => {
                 setMessages(prev => {
-                    if (prev.some(m => m.id === msg.id)) return prev;
+                    // Если сообщение с таким id уже есть и edited=true — обновляем контент
+                    const existingIdx = prev.findIndex(m => m.id === msg.id);
+                    if (existingIdx !== -1) {
+                        if (msg.edited) {
+                            const next = [...prev];
+                            next[existingIdx] = msg;
+                            return next;
+                        }
+                        return prev; // дубль без редактирования — пропускаем
+                    }
+                    // Заменяем оптимистичное сообщение
                     const optIdx = prev.findIndex(
                         m => String(m.id).startsWith('opt-')
                             && m.senderId === msg.senderId
@@ -202,21 +218,33 @@ function ChatScreen({ event: initialEvent, userId, onClose, from }) {
         clientRef.current?.sendText(text);
     };
 
-    // Редактирование — локально (TODO: добавить WS-событие edit на бэке)
+    // Редактирование через бэк — сохраняется в БД и рассылается по WS
     const startEdit = (msg) => {
         if (msg.senderId !== userId) return;
         setEditingId(msg.id);
         setEditText(msg.content);
     };
-    const confirmEdit = () => {
-        if (!editText.trim()) return;
+    const confirmEdit = async () => {
+        if (!editText.trim() || editingId == null) return;
+        const text = editText.trim();
+        // Оптимистично обновляем локально
         setMessages(prev => prev.map(m =>
-            m.id === editingId ? { ...m, content: editText.trim(), edited: true } : m
+            m.id === editingId ? { ...m, content: text, edited: true } : m
         ));
         setEditingId(null);
         setEditText('');
+        try {
+            // Сохраняем на бэке — WS вернёт обновлённое сообщение всем
+            await editChatMessage(event.id, editingId, text);
+        } catch (e) {
+            console.error('Edit failed', e);
+        }
     };
     const cancelEdit = () => { setEditingId(null); setEditText(''); };
+
+    // Аватарки: определяем кто inviter кто receiver
+    const myAvatarUrl      = myProfile?.avatarUrl || null;
+    const partnerAvatarUrl = partnerProfile?.avatarUrl || null;
 
     // Кнопка назад — если пришли из Lubimka, возвращаемся туда
     const handleBack = () => {
@@ -224,10 +252,34 @@ function ChatScreen({ event: initialEvent, userId, onClose, from }) {
         else { onClose(); }
     };
 
-    const bg    = categoryGradient(event.ideaCategory);
-    const emoji = categoryEmoji(event.ideaCategory);
-    // Hint — подсказка при сюрпризе
-    const hint  = event.hint;
+    const bg         = categoryGradient(event.ideaCategory);
+    const emoji      = categoryEmoji(event.ideaCategory);
+    const coverUrl   = getEventCoverUrl(event, userId);
+    const titleShown = getEventTitle(event, userId);
+    const isPending  = event.status === 'PENDING';
+    const isReceiver = event.receiverId === userId;
+    const [infoOpen, setInfoOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    const handleAccept = async () => {
+        setActionLoading(true);
+        try {
+            const updated = await acceptDateEvent(event.id);
+            setEvent(prev => ({ ...prev, ...updated }));
+            setInfoOpen(false);
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(false); }
+    };
+
+    const handleDecline = async () => {
+        setActionLoading(true);
+        try {
+            const updated = await declineDateEvent(event.id);
+            setEvent(prev => ({ ...prev, ...updated }));
+            setInfoOpen(false);
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(false); }
+    };
 
     return (
         <div className="ch-screen open">
@@ -237,33 +289,87 @@ function ChatScreen({ event: initialEvent, userId, onClose, from }) {
                 <button className="ch-btn-back" onClick={handleBack}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="ch-topbar-ava" style={{ background: bg }}>{emoji}</div>
+                <div className="ch-topbar-ava" style={{
+                    background: coverUrl ? 'none' : bg,
+                    overflow: 'hidden',
+                }}>
+                    {coverUrl
+                        ? <img src={coverUrl} alt="сюрприз" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
+                        : emoji
+                    }
+                </div>
                 <div className="ch-topbar-info">
-                    <div className="ch-topbar-title">{event.ideaTitle}</div>
+                    <div className="ch-topbar-title">{titleShown}</div>
                     <div className="ch-topbar-sub">
                         <StatusBadge status={event.status} />
                         {!connected && <span style={{ color: '#aaa', marginLeft: 6, fontSize: 10 }}>· подключение…</span>}
                     </div>
                 </div>
+                {/* Кнопка инфо — открывает попап с деталями */}
+                <button className="ch-info-btn" onClick={() => setInfoOpen(o => !o)}>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="8" strokeWidth="2.5"/>
+                        <line x1="12" y1="12" x2="12" y2="16"/>
+                    </svg>
+                </button>
             </div>
 
-            {/* Закреплённый комментарий при приглашении */}
-            {(hint || event.status === 'PENDING') && (
-                <div className="ch-pinned">
-                    <div className="ch-pinned-icon">📌</div>
-                    <div className="ch-pinned-body">
-                        <div className="ch-pinned-label">Комментарий к приглашению</div>
-                        <div className="ch-pinned-text">
-                            {hint || formatEventDate(event)}
-                            {event.isSurprise && <span className="ch-pinned-surprise"> · 🎁 Сюрприз</span>}
-                        </div>
+            {/* Попап с деталями приглашения */}
+            {infoOpen && (
+                <>
+                    <div className="ch-info-bg" onClick={() => setInfoOpen(false)} />
+                    <div className="ch-info-popup">
+                        {formatEventDate(event) && (
+                            <div className="ch-info-row">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <span>{formatEventDate(event)}</span>
+                            </div>
+                        )}
+                        {event.isSurprise && (
+                            <div className="ch-info-row">🎁 <span>Свидание-сюрприз</span></div>
+                        )}
+                        {event.hint && (
+                            <div className="ch-info-row">💬 <span style={{ fontStyle: 'italic', color: '#666' }}>{event.hint}</span></div>
+                        )}
+                        {isPending && isReceiver && (
+                            <div className="ch-info-actions">
+                                <button className="ch-info-action accept" onClick={handleAccept} disabled={actionLoading}>
+                                    ✅ Принять
+                                </button>
+                                <button className="ch-info-action decline" onClick={handleDecline} disabled={actionLoading}>
+                                    Отклонить
+                                </button>
+                            </div>
+                        )}
+                        {isPending && !isReceiver && (
+                            <div className="ch-info-actions">
+                                <button
+                                    className="ch-info-action decline"
+                                    style={{ color: '#C0392B' }}
+                                    onClick={async () => {
+                                        setActionLoading(true);
+                                        try {
+                                            const updated = await cancelDateEvent(event.id);
+                                            setEvent(prev => ({ ...prev, ...updated }));
+                                            setInfoOpen(false);
+                                        } catch(e) { console.error(e); }
+                                        finally { setActionLoading(false); }
+                                    }}
+                                    disabled={actionLoading}
+                                >
+                                    🚫 Отменить
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </div>
+                </>
             )}
-
-            {/* Баннер приглашения */}
-            <InviteBanner event={event} userId={userId} onStatusChange={setEvent} />
-            <PendingBanner event={event} userId={userId} />
 
             <div className="ch-messages">
                 {loading ? (
@@ -285,7 +391,14 @@ function ChatScreen({ event: initialEvent, userId, onClose, from }) {
                             return (
                                 <div key={msg.id ?? i} className={`ch-bubble-row ${mine ? 'mine' : ''}`}>
                                     <div className={`ch-b-ava ${mine ? 'me' : 'her'}`}>
-                                        {mine ? '🐻' : '🌸'}
+                                        {mine
+                                            ? (myAvatarUrl
+                                                ? <img src={myAvatarUrl} alt="me" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                                : '🐻')
+                                            : (partnerAvatarUrl
+                                                ? <img src={partnerAvatarUrl} alt="partner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                                : '🌸')
+                                        }
                                     </div>
                                     <div>
                                         {isEditing ? (
@@ -347,13 +460,30 @@ export default function ChatsPage() {
     const navigate   = useNavigate();
     const { state }  = useLocation();
     const { userId } = useAuthContext();
+    const { newEvents, clearUnread, markEventRead } = useNotifications();
+
+    // Очищаем badge когда зашли в раздел чатов
+    useEffect(() => { clearUnread(); }, []); // eslint-disable-line
 
     const [events,      setEvents]      = useState([]);
     const [unreadMap,   setUnreadMap]   = useState({});
-    const [lastMsgs,    setLastMsgs]    = useState({}); // eventId → last message text
+    const [lastMsgs,    setLastMsgs]    = useState({});
     const [loading,     setLoading]     = useState(true);
     const [activeEvent, setActiveEvent] = useState(null);
     const [from,        setFrom]        = useState(null);
+    const [myProfile,   setMyProfile]   = useState(null);
+    const [partnerProfile, setPartnerProfile] = useState(null);
+
+    // Загружаем профили для аватарок
+    useEffect(() => {
+        Promise.all([
+            getMyProfile().catch(() => null),
+            getPartner().catch(() => null),
+        ]).then(([me, partner]) => {
+            setMyProfile(me);
+            setPartnerProfile(partner);
+        });
+    }, []);
 
     // Загружаем все активные чаты (PENDING + ACCEPTED)
     useEffect(() => {
@@ -384,7 +514,33 @@ export default function ChatsPage() {
         return () => { cancelled = true; };
     }, []);
 
-    // Реалтайм: WS-подписки на все чаты для мгновенного обновления превью
+    // Автооткрытие чата если пришли с state.eventId
+    useEffect(() => {
+        if (state?.eventId && events.length > 0) {
+            const ev = events.find(e => e.id === state.eventId);
+            if (ev) openChat(ev, state?.from);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state, events]);
+
+    const openChat = (event, fromSource = null) => {
+        setActiveEvent(event);
+        setFrom(fromSource);
+        setUnreadMap(prev => ({ ...prev, [event.id]: 0 }));
+        markEventRead(event.id);
+        markChatRead(event.id).catch(() => {});
+    };
+
+    // Табы: 0=Запланированные(ACCEPTED), 1=Приглашения(PENDING), 2=Прошедшие(COMPLETED)
+    const [activeTab,  setActiveTab]  = useState(0);
+    const [tabOffset,  setTabOffset]  = useState(0);
+    const [history,    setHistory]    = useState([]);
+    const tabBarRef  = useRef(null);
+    const trackRef   = useRef(null);
+    const [indStyle,   setIndStyle]   = useState({ left: 0, width: 0 });
+    const TABS = ['Запланированные', 'Приглашения', 'Прошедшие', 'Не состоявшиеся'];
+
+    // Реалтайм: подписываемся на WS каждого чата чтобы обновлять превью без перезагрузки
     useEffect(() => {
         if (events.length === 0 || !userId) return;
 
@@ -396,16 +552,16 @@ export default function ChatsPage() {
                     if (msg.type === 'SYSTEM') return;
                     // Обновляем последнее сообщение в превью
                     setLastMsgs(prev => ({ ...prev, [ev.id]: msg.content }));
-                    // Не считаем unread если этот чат сейчас открыт
+                    // Обновляем unread только если этот чат не открыт
                     setActiveEvent(current => {
-                        if (current?.id !== ev.id) {
+                        if (!current || current.id !== ev.id) {
                             setUnreadMap(prev => ({ ...prev, [ev.id]: (prev[ev.id] || 0) + 1 }));
                         }
                         return current;
                     });
                 },
                 onSystemEvent: (evt) => {
-                    // Обновляем статус события в списке если пришло системное
+                    // Обновляем статус события если изменился (принято/отклонено)
                     if (evt.eventType) {
                         setEvents(prev => prev.map(e =>
                             e.id === ev.id ? { ...e, status: evt.eventType } : e
@@ -421,25 +577,132 @@ export default function ChatsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [events.length, userId]);
 
-    // Автооткрытие чата если пришли с state.eventId
+    // Синхронизируем события из NotificationContext (новые + обновлённые статусы)
     useEffect(() => {
-        if (state?.eventId && events.length > 0) {
-            const ev = events.find(e => e.id === state.eventId);
-            if (ev) openChat(ev, state?.from);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, events]);
+        if (newEvents.length === 0) return;
+        setEvents(prev => {
+            const existingIds = new Set(prev.map(e => e.id));
+            const fresh = newEvents.filter(e => !existingIds.has(e.id));
+            // Обновляем статусы существующих событий (cancel/decline)
+            const updated = prev.map(e => {
+                const upd = newEvents.find(ne => ne.id === e.id);
+                return upd ? { ...e, ...upd } : e;
+            });
+            if (fresh.length === 0) return updated;
+            // Подгружаем previews для новых
+            fresh.forEach(ev => {
+                getUnreadCount(ev.id).then(count => setUnreadMap(p => ({ ...p, [ev.id]: count }))).catch(() => {});
+            });
+            return [...updated, ...fresh];
+        });
+    }, [newEvents]);
 
-    const openChat = (event, fromSource = null) => {
-        setActiveEvent(event);
-        setFrom(fromSource);
-        setUnreadMap(prev => ({ ...prev, [event.id]: 0 }));
-        markChatRead(event.id).catch(() => {});
+    // Загружаем историю (прошедшие свидания)
+    useEffect(() => {
+        getDateHistory().then(data => setHistory(data || [])).catch(() => {});
+    }, []);
+
+    // Индикатор таба
+    const updateIndicator = useCallback((idx) => {
+        const bar = tabBarRef.current;
+        if (!bar) return;
+        const tabs = bar.querySelectorAll('.ch-tab');
+        const tab  = tabs[idx];
+        if (!tab) return;
+        const br = bar.getBoundingClientRect();
+        const tr = tab.getBoundingClientRect();
+        setIndStyle({ left: tr.left - br.left, width: tr.width });
+    }, []);
+
+    useLayoutEffect(() => {
+        const id = setTimeout(() => updateIndicator(activeTab), 50);
+        return () => clearTimeout(id);
+    }, [activeTab, updateIndicator]);
+
+    const tabElemsRef = useRef([]);
+
+    const goTab = (idx) => {
+        setActiveTab(idx);
+        setTabOffset(idx * 100);
+        // Прокручиваем таббар чтобы выбранный таб был полностью виден
+        const bar = tabBarRef.current;
+        const tab = tabElemsRef.current[idx];
+        if (bar && tab) {
+            const barRect = bar.getBoundingClientRect();
+            const tabRect = tab.getBoundingClientRect();
+            if (tabRect.right > barRect.right) {
+                bar.scrollBy({ left: tabRect.right - barRect.right + 12, behavior: 'smooth' });
+            } else if (tabRect.left < barRect.left) {
+                bar.scrollBy({ left: tabRect.left - barRect.left - 12, behavior: 'smooth' });
+            }
+        }
     };
 
-    // PENDING события — ожидают ответа
-    const pendingEvents  = events.filter(e => e.status === 'PENDING');
-    const acceptedEvents = events.filter(e => e.status === 'ACCEPTED');
+    // Свайп по табам
+    const swipeStartX = useRef(null);
+    const handleSwipeStart = (e) => { swipeStartX.current = e.touches?.[0]?.clientX ?? e.clientX; };
+    const handleSwipeEnd   = (e) => {
+        if (swipeStartX.current == null) return;
+        const dx = (e.changedTouches?.[0]?.clientX ?? e.clientX) - swipeStartX.current;
+        if (Math.abs(dx) < 50) return;
+        if (dx < 0 && activeTab < 3) goTab(activeTab + 1);
+        if (dx > 0 && activeTab > 0) goTab(activeTab - 1);
+        swipeStartX.current = null;
+    };
+
+    const cancelledEvents = events
+        .filter(e => e.status === 'CANCELLED' || e.status === 'DECLINED')
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+    const acceptedEvents = events
+        .filter(e => e.status === 'ACCEPTED')
+        .sort((a, b) => {
+            const ta = lastMsgs[a.id] ? new Date(a.updatedAt).getTime() : 0;
+            const tb = lastMsgs[b.id] ? new Date(b.updatedAt).getTime() : 0;
+            return tb - ta;
+        });
+    const pendingEvents = events
+        .filter(e => e.status === 'PENDING')
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Значки непрочитанных по табам
+    const unreadAccepted = acceptedEvents.reduce((s, e) => s + (unreadMap[e.id] || 0), 0);
+    const unreadPending  = pendingEvents.reduce((s, e)  => s + (unreadMap[e.id] || 0), 0);
+
+    const renderRow = (event, extraCls = '') => {
+        const unread    = unreadMap[event.id] || 0;
+        const lastMsg   = lastMsgs[event.id];
+        const isReceiver = event.receiverId === userId;
+        const title     = getEventTitle(event, userId);
+        const coverUrl  = getEventCoverUrl(event, userId);
+        return (
+            <div key={event.id} className={`ch-row ${extraCls}`} onClick={() => openChat(event)}>
+                <div className="ch-ava" style={{
+                    background: coverUrl ? 'none' : categoryGradient(event.ideaCategory),
+                    overflow: 'hidden',
+                }}>
+                    {coverUrl
+                        ? <img src={coverUrl} alt="сюрприз" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : categoryEmoji(event.ideaCategory)
+                    }
+                </div>
+                <div className="ch-info">
+                    <div className="ch-name">{title}</div>
+                    <div className="ch-preview">
+                        {lastMsg || (event.status === 'PENDING'
+                            ? (isReceiver ? '💌 Вас пригласили' : '⏳ Ожидаем ответа')
+                            : formatEventDate(event))}
+                    </div>
+                </div>
+                <div className="ch-right">
+                    <div className="ch-time">{fmtTime(event.updatedAt || event.createdAt)}</div>
+                    {unread > 0 && <div className="ch-badge">{unread}</div>}
+                </div>
+            </div>
+        );
+    };
+
+    const tabBadge = [unreadAccepted, unreadPending, 0, 0];
 
     return (
         <div className="chats-page">
@@ -459,78 +722,58 @@ export default function ChatsPage() {
                 <div className="ch-top-title">Чаты <span>свиданий</span></div>
             </div>
 
-            <div className="ch-scroll">
+            {/* TAB BAR */}
+            <div className="ch-tab-bar" ref={tabBarRef}>
+                {TABS.map((label, i) => (
+                    <div
+                        key={i}
+                        className={`ch-tab ${activeTab === i ? 'active' : ''}`}
+                        ref={el => tabElemsRef.current[i] = el}
+                        onClick={() => goTab(i)}
+                    >
+                        {label}
+                        {tabBadge[i] > 0 && <span className="ch-tab-badge">{tabBadge[i]}</span>}
+                    </div>
+                ))}
+                <div className="ch-tab-indicator" style={indStyle} />
+            </div>
+
+            {/* SWIPEABLE TRACK */}
+            <div
+                className="ch-scroll"
+                ref={trackRef}
+                onTouchStart={handleSwipeStart}
+                onTouchEnd={handleSwipeEnd}
+                onMouseDown={handleSwipeStart}
+                onMouseUp={handleSwipeEnd}
+            >
                 {loading ? (
-                    <div style={{ padding: '32px 20px', textAlign: 'center', color: '#888', fontSize: 14 }}>
-                        Загружаем…
-                    </div>
-                ) : events.length === 0 ? (
-                    <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-                        <div style={{ fontFamily: 'Cormorant, serif', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
-                            Нет чатов
-                        </div>
-                        <div style={{ fontSize: 13, color: '#888', lineHeight: 1.5 }}>
-                            Откройте карточку идеи и пригласите партнёра — чат создастся сразу
-                        </div>
-                    </div>
+                    <div style={{ padding: '32px 20px', textAlign: 'center', color: '#888', fontSize: 14 }}>Загружаем…</div>
                 ) : (
                     <>
-                        {/* PENDING — обсуждение приглашения */}
-                        {pendingEvents.length > 0 && (
-                            <>
-                                <div className="ch-date-label">Ожидают ответа</div>
-                                {pendingEvents.map(event => {
-                                    const unread  = unreadMap[event.id] || 0;
-                                    const lastMsg = lastMsgs[event.id];
-                                    const isReceiver = event.receiverId === userId;
-                                    return (
-                                        <div key={event.id} className="ch-row ch-row--pending" onClick={() => openChat(event)}>
-                                            <div className="ch-ava" style={{ background: categoryGradient(event.ideaCategory) }}>
-                                                {categoryEmoji(event.ideaCategory)}
-                                            </div>
-                                            <div className="ch-info">
-                                                <div className="ch-name">{event.ideaTitle}</div>
-                                                <div className="ch-preview">
-                                                    {lastMsg || (isReceiver ? '💌 Вас пригласили' : '⏳ Ожидаем ответа')}
-                                                </div>
-                                            </div>
-                                            <div className="ch-right">
-                                                <div className="ch-time">{fmtTime(event.createdAt)}</div>
-                                                {unread > 0 && <div className="ch-badge">{unread}</div>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </>
+                        {/* TAB 0: Запланированные */}
+                        {activeTab === 0 && (
+                            acceptedEvents.length === 0
+                                ? <div className="ch-empty"><div style={{fontSize:40}}>📅</div><div className="ch-empty-title">Нет запланированных</div><div className="ch-empty-sub">Как только партнёр примет приглашение — свидание появится здесь</div></div>
+                                : acceptedEvents.map(e => renderRow(e))
                         )}
-
-                        {/* ACCEPTED — запланированные свидания */}
-                        {acceptedEvents.length > 0 && (
-                            <>
-                                <div className="ch-date-label">Запланированные</div>
-                                {acceptedEvents.map(event => {
-                                    const unread  = unreadMap[event.id] || 0;
-                                    const lastMsg = lastMsgs[event.id];
-                                    return (
-                                        <div key={event.id} className="ch-row" onClick={() => openChat(event)}>
-                                            <div className="ch-ava" style={{ background: categoryGradient(event.ideaCategory) }}>
-                                                {categoryEmoji(event.ideaCategory)}
-                                            </div>
-                                            <div className="ch-info">
-                                                <div className="ch-name">{event.ideaTitle}</div>
-                                                <div className={`ch-preview ${unread > 0 ? 'unread' : ''}`}>
-                                                    {lastMsg || formatEventDate(event)}
-                                                </div>
-                                            </div>
-                                            <div className="ch-right">
-                                                <div className="ch-time">{fmtTime(event.updatedAt)}</div>
-                                                {unread > 0 && <div className="ch-badge">{unread}</div>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </>
+                        {/* TAB 1: Приглашения */}
+                        {activeTab === 1 && (
+                            pendingEvents.length === 0
+                                ? <div className="ch-empty"><div style={{fontSize:40}}>💌</div><div className="ch-empty-title">Нет активных приглашений</div><div className="ch-empty-sub">Пригласите партнёра на свидание из карточки идеи</div></div>
+                                : pendingEvents.map(e => renderRow(e, 'ch-row--pending'))
+                        )}
+                        {/* TAB 2: Прошедшие */}
+                        {activeTab === 2 && (
+                            history.length === 0
+                                ? <div className="ch-empty"><div style={{fontSize:40}}>🕐</div><div className="ch-empty-title">Нет прошедших свиданий</div><div className="ch-empty-sub">История свиданий появится здесь</div></div>
+                                : history.map(e => renderRow(e))
+                        )}
+                        {/* TAB 3: Не состоявшиеся */}
+                        {activeTab === 3 && (
+                            cancelledEvents.length === 0
+                                ? <div className="ch-empty"><div style={{fontSize:40}}>🚫</div><div className="ch-empty-title">Нет отменённых</div><div className="ch-empty-sub">Отменённые и отклонённые приглашения появятся здесь</div></div>
+                                : cancelledEvents.map(e => renderRow(e))
                         )}
                     </>
                 )}
@@ -541,6 +784,8 @@ export default function ChatsPage() {
                     event={activeEvent}
                     userId={userId}
                     from={from}
+                    myProfile={myProfile}
+                    partnerProfile={partnerProfile}
                     onClose={() => setActiveEvent(null)}
                 />
             )}

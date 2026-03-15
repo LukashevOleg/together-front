@@ -2,14 +2,12 @@ import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
-/** Достаём userId из payload JWT без внешних библиотек */
 function decodeUserId(token) {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.userId ?? null;
-    } catch {
-        return null;
-    }
+        const raw = payload.userId ?? null;
+        return raw !== null ? Math.floor(Number(raw)) : null;
+    } catch { return null; }
 }
 
 export function AuthProvider({ children }) {

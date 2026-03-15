@@ -1,14 +1,21 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useNotifications } from '../../context/NotificationContext';
 import './BottomNav.css';
 
 export default function BottomNav() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
+    const { totalUnread, clearUnread } = useNotifications();
 
     const isHome    = pathname === '/';
     const isIdeas   = pathname.startsWith('/ideas');
     const isChats   = pathname.startsWith('/chats');
     const isLubimka = pathname.startsWith('/lubimka') || pathname === '/partner';
+
+    const handleChats = () => {
+        clearUnread();
+        navigate('/chats');
+    };
 
     return (
         <nav className="bottom-nav">
@@ -39,9 +46,22 @@ export default function BottomNav() {
                 <div className="nav-center-label">Свайпы</div>
             </div>
 
-            <div className={`nav-item ${isChats ? 'active' : ''}`} onClick={() => navigate('/chats')}>
-                <div className="nav-icon">
+            <div className={`nav-item ${isChats ? 'active' : ''}`} onClick={handleChats}>
+                <div className="nav-icon" style={{ position: 'relative' }}>
                     <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+
+                    {totalUnread > 0 && !isChats && (
+                        <span style={{
+                            position: 'absolute',
+                            top: -3, right: -3,
+                            width: 8, height: 8,
+                            borderRadius: '50%',
+                            background: '#7B1E2E',
+                            border: '1.5px solid #fff',
+                            display: 'block',
+                            zIndex: 10,
+                        }} />
+                    )}
                 </div>
                 <div className="nav-label">Чаты</div>
             </div>

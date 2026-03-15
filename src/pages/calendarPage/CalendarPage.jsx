@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate }   from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
 import { getActiveChats, getDateHistory, categoryEmoji, categoryGradient, formatEventDate } from '../../api/datingApi';
+import { getEventTitle, getEventCoverUrl } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
 import './CalendarPage.css';
 
@@ -27,19 +29,29 @@ function eventDateISO(event) {
 }
 
 // ── EventCard ─────────────────────────────────────────────────────────────
-function EventCard({ event, onChatClick }) {
-    const confirmed  = event.status === 'ACCEPTED';
-    const bg         = categoryGradient(event.ideaCategory);
-    const emoji      = categoryEmoji(event.ideaCategory);
-    const time       = event.scheduledTime ? event.scheduledTime.slice(0, 5) : null;
+function EventCard({ event, onChatClick, userId }) {
+    const confirmed = event.status === 'ACCEPTED';
+    const bg        = categoryGradient(event.ideaCategory);
+    const emoji     = categoryEmoji(event.ideaCategory);
+    const time      = event.scheduledTime ? event.scheduledTime.slice(0, 5) : null;
+    const title     = getEventTitle(event, userId);
+    const coverUrl  = getEventCoverUrl(event, userId);
 
     return (
         <div className={`cal-event-card ${confirmed ? 'confirmed' : ''}`}>
             <div className="cal-event-accent" />
-            <div className="cal-event-img" style={{ background: bg }}>{emoji}</div>
+            <div className="cal-event-img" style={{
+                background: coverUrl ? 'none' : bg,
+                overflow: 'hidden',
+            }}>
+                {coverUrl
+                    ? <img src={coverUrl} alt="сюрприз" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                    : emoji
+                }
+            </div>
             <div className="cal-event-body">
                 <div>
-                    <div className="cal-event-title">{event.ideaTitle}</div>
+                    <div className="cal-event-title">{title}</div>
                     <div className="cal-event-time">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         {time ? time : 'Время не указано'}
@@ -50,7 +62,6 @@ function EventCard({ event, onChatClick }) {
                 </div>
             </div>
 
-            {/* Кнопка чата */}
             <button
                 className="cal-event-chat-btn"
                 onClick={e => { e.stopPropagation(); onChatClick(event); }}
@@ -126,6 +137,7 @@ function MonthGrid({ year, month, today, selectedDate, eventDates, onSelect }) {
 // ── CalendarPage ──────────────────────────────────────────────────────────
 export default function CalendarPage() {
     const navigate = useNavigate();
+    const { userId } = useAuthContext();
     const today    = useMemo(() => todayISO(), []);
 
     const [view,       setView]       = useState('month');
@@ -299,7 +311,7 @@ export default function CalendarPage() {
                                 </div>
                             ) : selectedDayEvents.length > 0 ? (
                                 selectedDayEvents.map(event => (
-                                    <EventCard key={event.id} event={event} onChatClick={openChat} />
+                                    <EventCard key={event.id} event={event} onChatClick={openChat} userId={userId} />
                                 ))
                             ) : (
                                 <>
@@ -341,7 +353,7 @@ export default function CalendarPage() {
                                 <div key={group.iso}>
                                     <div className="cal-list-date-label">{group.label}</div>
                                     {group.events.map(event => (
-                                        <EventCard key={event.id} event={event} onChatClick={openChat} />
+                                        <EventCard key={event.id} event={event} onChatClick={openChat} userId={userId} />
                                     ))}
                                 </div>
                             ))
@@ -364,7 +376,7 @@ export default function CalendarPage() {
 
             </div>
 
-            <BottomNav onCreateClick={() => navigate('/ideas/create')} />
+            <BottomNav />
         </div>
     );
 }
