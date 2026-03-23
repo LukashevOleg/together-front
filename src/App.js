@@ -20,6 +20,8 @@ import SwipePage        from './pages/swipePage/SwipePage';
 import CalendarPage     from './pages/calendarPage/CalendarPage';
 import MatchesPage      from './pages/matchesPage/MatchesPage';
 import InvitationsPage  from './pages/invitationsPage/InvitationsPage';
+import StatsPage from './pages/statsPage/StatsPage';
+import HistoryPage      from './pages/historyPage/HistoryPage';
 
 import './styles/globals.css';
 
@@ -35,18 +37,10 @@ function AuthRoute() {
     if (isAuthenticated) {
         const pendingCode = sessionStorage.getItem('pendingInviteCode');
         if (pendingCode) return <Navigate to={`/join/${pendingCode}`} replace />;
-        return <Navigate to="/" replace />;
     }
 
     const handleSuccess = (result) => {
         login(result);
-
-        const pendingCode = sessionStorage.getItem('pendingInviteCode');
-        if (pendingCode) {
-            navigate(`/join/${pendingCode}`, { replace: true });
-            return;
-        }
-
         navigate(result.isNewUser ? '/onboarding' : '/', { replace: true });
     };
 
@@ -72,9 +66,11 @@ function AppRoutes() {
             <Route path="/planned"      element={<PrivateRoute><DateModePage mode="planned" /></PrivateRoute>} />
             <Route path="/swipe"        element={<PrivateRoute><SwipePage /></PrivateRoute>} />
             <Route path="/calendar"     element={<PrivateRoute><CalendarPage /></PrivateRoute>} />
+            <Route path="/stats" element={<PrivateRoute><StatsPage /></PrivateRoute>} />
             <Route path="/matches"      element={<PrivateRoute><MatchesPage /></PrivateRoute>} />
             <Route path="/invitations"  element={<PrivateRoute><InvitationsPage /></PrivateRoute>} />
             <Route path="/lubimka"      element={<PrivateRoute><LubimkaPage /></PrivateRoute>} />
+            <Route path="/history"      element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
             <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
 

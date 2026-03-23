@@ -19,7 +19,6 @@ const CATEGORY_CHIPS = [
     { key: 'ACTIVE',      label: '⚡ Актив' },
     { key: 'CREATIVE',    label: '🎨 Творчество' },
     { key: 'INDOOR',      label: '🏠 Дома' },
-    { key: 'TRAVEL',      label: '✈️ Путешествие' },
 ];
 
 export default function IdeasFeedPage() {

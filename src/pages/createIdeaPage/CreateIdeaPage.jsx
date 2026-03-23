@@ -12,7 +12,6 @@ const CATEGORIES = [
     { key: 'ACTIVE',        label: '⚡ Актив' },
     { key: 'CREATIVE',      label: '🎨 Творчество' },
     { key: 'INDOOR',        label: '🏠 Дома' },
-    { key: 'TRAVEL',        label: '✈️ Путешествие' },
     { key: 'WELLNESS',      label: '🧘 Велнес' },
     { key: 'ENTERTAINMENT', label: '🎭 Развлечение' },
     { key: 'OTHER',         label: '✨ Другое' },

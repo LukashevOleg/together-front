@@ -15,8 +15,8 @@ const EMOJIS = {
 
 const LABELS = {
     ROMANTIC: 'Романтика', OUTDOOR: 'Природа', FOOD: 'Гастро',
-    ACTIVE: 'Актив', CREATIVE: 'Творчество', INDOOR: 'Дома',
-    TRAVEL: 'Путешествие', WELLNESS: 'Велнес',
+    ACTIVE: 'Актив', CREATIVE: 'Творчество', INDOOR: 'Дома'
+    , WELLNESS: 'Релакс',
 };
 
 export default function IdeaSmallCard({ idea, onClick }) {

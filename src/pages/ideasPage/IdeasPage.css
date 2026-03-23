@@ -84,3 +84,11 @@
 .category-emoji { font-size: 36px; margin-bottom: 10px; line-height: 1; }
 .category-label { font-family: 'Cormorant', serif; font-size: 18px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
 .category-count { font-size: 11px; color: var(--text-muted); }
+.category-card[style*="1 / -1"] {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+}
+.category-card[style*="1 / -1"] .category-emoji { font-size: 28px; margin-bottom: 0; }
+.category-card[style*="1 / -1"] .category-label { font-size: 20px; margin-bottom: 2px; }

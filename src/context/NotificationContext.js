@@ -37,11 +37,9 @@ export function NotificationProvider({ children }) {
             reconnectDelay: 5000,
 
             onConnect: () => {
-                console.log('[Notify] connected, uid=', uid);
 
                 // Персональный канал — новый чат от партнёра
                 client.subscribe(`/topic/user/${uid}`, (frame) => {
-                    console.log('[Notify] personal:', frame.body.substring(0, 60));
                     try {
                         const event = JSON.parse(frame.body);
                         if (!event?.id) return;
@@ -63,7 +61,6 @@ export function NotificationProvider({ children }) {
                 // Подписываемся на существующие чаты
                 getActiveChats()
                     .then(chats => {
-                        console.log('[Notify] existing chats:', chats.length);
                         chats.forEach(ev => subscribeChat(ev.id));
                     })
                     .catch(() => {});
@@ -76,18 +73,13 @@ export function NotificationProvider({ children }) {
         function subscribeChat(eventId) {
             if (subscribedRef.current.has(eventId)) return;
             subscribedRef.current.add(eventId);
-            console.log('[Notify] subscribeChat for eventId=', eventId);
 
             client.subscribe(`/topic/chat/${eventId}`, (frame) => {
-                console.log('[Notify] RAW msg eventId=', eventId, frame.body.substring(0, 120));
                 try {
                     const msg = JSON.parse(frame.body);
-                    console.log('[Notify] senderId=', msg.senderId, 'uid=', uid, 'type=', msg.type, 'edited=', msg.edited);
                     if (msg.type === 'SYSTEM' || Number(msg.senderId) === uid || msg.edited) {
-                        console.log('[Notify] FILTERED');
                         return;
                     }
-                    console.log('[Notify] BUMPING unread for chat', eventId);
                     setTotalUnread(n => n + 1);
                 } catch {}
             });

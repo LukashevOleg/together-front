@@ -256,11 +256,9 @@ export default function LubimkaPage() {
                     <Tile tile={TILES[1]} onClick={() => navigate('/invitations')}>
                         <div className="lb2-tile-label">Приглашения</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-                            <div className="lb2-tile-num-lg">{loading ? '…' : chats.length}</div>
+                            <div className="lb2-tile-num-lg">{loading ? '...' : pendingChats}</div>
                         </div>
-                        {pendingChats > 0 && (
-                            <div className="lb2-tile-sub">{pendingChats} новых</div>
-                        )}
+                        <div className="lb2-tile-sub">новых</div>
                     </Tile>
 
                     {/* lc1 — Календарь */}
@@ -298,7 +296,7 @@ export default function LubimkaPage() {
                     </Tile>
 
                     {/* lc2 — Статистика */}
-                    <Tile tile={TILES[4]} onClick={() => navigate('/calendar')}>
+                    <Tile tile={TILES[4]} onClick={() => navigate('/stats')}>
                         <div className="lb2-tile-label">Статистика пары</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
                             <div style={{ fontFamily: 'Cormorant, serif', fontSize: 56, fontWeight: 600, lineHeight: 1, color: '#111' }}>
@@ -311,7 +309,7 @@ export default function LubimkaPage() {
                     </Tile>
 
                     {/* rc2 — История */}
-                    <Tile tile={TILES[5]} onClick={() => navigate('/calendar')}>
+                    <Tile tile={TILES[5]} onClick={() => navigate("/history")}>
                         <div className="lb2-tile-label" style={{ whiteSpace: 'nowrap' }}>История свиданий</div>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="90" height="90" viewBox="0 0 24 24" fill="none"

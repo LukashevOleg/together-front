@@ -22,7 +22,7 @@ const CATEGORY_EMOJI = {
 const CATEGORY_LABELS = {
     ROMANTIC: 'Романтика', OUTDOOR: 'Природа', FOOD: 'Гастро',
     ACTIVE: 'Актив', CREATIVE: 'Творчество', INDOOR: 'Дома',
-    TRAVEL: 'Путешествие', WELLNESS: 'Велнес',
+    WELLNESS: 'Релакс',
     ENTERTAINMENT: 'Развлечение', OTHER: 'Другое',
 };
 
