@@ -32,17 +32,55 @@ function catEmoji(cat) {
     };
     return MAP[cat] || '💡';
 }
+function pluralReviews(n) {
+    if (n % 100 >= 11 && n % 100 <= 14) return 'отзывов';
+    switch (n % 10) {
+        case 1: return 'отзыв';
+        case 2: case 3: case 4: return 'отзыва';
+        default: return 'отзывов';
+    }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function StarsSvg({ rating }) {
+    return (
+        <div className="sw-stars-wrap">
+            {[1,2,3,4,5].map(i => {
+                const full = i <= Math.floor(rating);
+                const half = !full && i === Math.floor(rating) + 1 && (rating % 1) >= 0.5;
+                const id = `sh${i}${Math.random().toString(36).slice(2,6)}`;
+                return (
+                    <svg key={i} className="sw-star-svg" viewBox="0 0 24 24">
+                        {half && (
+                            <defs>
+                                <linearGradient id={id}>
+                                    <stop offset="50%" stopColor="#7B1E2E"/>
+                                    <stop offset="50%" stopColor="#E5E3E0"/>
+                                </linearGradient>
+                            </defs>
+                        )}
+                        <polygon
+                            points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+                            fill={full ? '#7B1E2E' : half ? `url(#${id})` : '#E5E3E0'}
+                            stroke={full || half ? '#7B1E2E' : '#E5E3E0'}
+                            strokeWidth="1.5"
+                        />
+                    </svg>
+                );
+            })}
+        </div>
+    );
+}
 
 // ── SwipeCard ──────────────────────────────────────────────────────────────
-const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef }) => {
+const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef, navigate }) => {
+    const [expanded, setExpanded] = useState(false);
     const bg = item.coverPhotoUrl ? null : categoryGradient(item.ideaCategory);
 
-    const dragState = useRef({
-        active: false, startX: 0, startY: 0, curX: 0,
-    });
+    const dragState = useRef({ active: false, startX: 0, startY: 0, curX: 0 });
 
     const onPointerDown = useCallback((e) => {
-        if (e.target.closest('.sw-card-location')) return;
+        if (e.target.closest('.sw-no-drag')) return;
         if (posClass !== 'pos-front') return;
         dragState.current = { active: true, startX: e.clientX, startY: e.clientY, curX: 0 };
         cardRef.current.style.transition = 'none';
@@ -56,7 +94,7 @@ const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef }) => {
         const y = e.clientY - d.startY;
         d.curX = x;
         const card = cardRef.current;
-        card.style.transform = `translate(${x}px, ${y * 0.25}px) rotate(${x * 0.07}deg)`;
+        card.style.transform = `translate(${x}px, calc(-50% + ${y * 0.25}px)) rotate(${x * 0.07}deg)`;
         card.querySelector('.sw-stamp.like').style.opacity = Math.min(1, Math.max(0, x / 70));
         card.querySelector('.sw-stamp.nope').style.opacity = Math.min(1, Math.max(0, -x / 70));
     }, [cardRef]);
@@ -85,8 +123,7 @@ const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef }) => {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
         >
-            {/* Stamps */}
-            <div className="sw-stamp like">ХОЧУ ❤</div>
+            <div className="sw-stamp like">ХОЧУ ♥</div>
             <div className="sw-stamp nope">НЕТ ✕</div>
 
             {/* Hero */}
@@ -95,52 +132,66 @@ const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef }) => {
                     ? <img className="sw-card-hero-img" src={item.coverPhotoUrl} alt={item.ideaTitle} />
                     : <span className="sw-card-hero-emoji">{catEmoji(item.ideaCategory)}</span>
                 }
-                <div className="sw-card-hero-grad" />
-                <div className="sw-card-hero-title">{item.ideaTitle}</div>
             </div>
 
-            {/* Body */}
+            {/* Content — структура точно как в HTML макете */}
             <div className="sw-card-body">
+                <div className="sw-card-title">{item.ideaTitle}</div>
+
                 <div className="sw-card-tags">
-                    {item.ideaCategory && (
-                        <span className="sw-ctag cat">{catLabel(item.ideaCategory)}</span>
-                    )}
-                    {item.durationMin && (
-                        <span className="sw-ctag info">⏱ {formatDuration(item.durationMin)}</span>
-                    )}
-                    <span className="sw-ctag info">💰 {formatPrice(item.priceFrom)}</span>
+                    {item.ideaCategory && <span className="sw-ctag cat">{catLabel(item.ideaCategory)}</span>}
+                    {item.durationMin   && <span className="sw-ctag info">{formatDuration(item.durationMin)}</span>}
+                    <span className="sw-ctag info">{formatPrice(item.priceFrom)}</span>
                 </div>
 
-                {item.rating && (
-                    <div className="sw-card-meta">
-                        <div className="sw-rating">
-                            <span className="sw-stars">★</span>
+                <div className="sw-rating-row">
+                    {item.rating > 0
+                        ? <>
+                            <StarsSvg rating={Number(item.rating)} />
                             <span className="sw-rating-num">{Number(item.rating).toFixed(1)}</span>
-                            {item.reviewsCount > 0 && (
-                                <span className="sw-rating-count">({item.reviewsCount})</span>
-                            )}
+                            <span className="sw-rating-count">
+                                ({item.reviewsCount} {pluralReviews(item.reviewsCount)})
+                            </span>
+                        </>
+                        : <>
+                            <StarsSvg rating={0} />
+                            <span className="sw-rating-count" style={{ marginLeft: 4 }}>Нет оценок</span>
+                        </>
+                    }
+                </div>
+
+                {!!(item.description || item.shortDescription) && (
+                    <div className="sw-desc-wrap sw-no-drag">
+                        <div className={`sw-desc-text${expanded ? ' expanded' : ''}`}>
+                            {item.description || item.shortDescription}
                         </div>
+                        <span
+                            className="sw-desc-toggle"
+                            onPointerDown={e => e.stopPropagation()}
+                            onClick={() => setExpanded(v => !v)}
+                        >
+                            {expanded ? 'Свернуть' : 'Читать далее'}
+                        </span>
                     </div>
                 )}
 
-                {item.location && (
-                    <div
-                        className="sw-card-location"
-                        onPointerDown={e => e.stopPropagation()}
-                        onClick={() => onLocationClick(item)}
-                    >
-                        <svg viewBox="0 0 24 24">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <span className="sw-card-location-text">{item.location}</span>
-                        <span className="sw-card-location-arrow">→</span>
-                    </div>
-                )}
+                <button
+                    className="sw-btn-more sw-no-drag"
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={() => navigate && navigate(`/ideas/${item.ideaId}`)}
+                >
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 8 16 12 12 16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    Узнать больше
+                </button>
             </div>
         </div>
     );
 };
+
 
 // ── MatchOverlay ───────────────────────────────────────────────────────────
 const MatchOverlay = ({ match, myProfile, partnerProfile, onInvite, onSkip }) => {
@@ -323,8 +374,8 @@ export default function SwipePage() {
         if (card) {
             card.style.transition = 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.35s ease';
             card.style.transform  = action === 'LIKE'
-                ? 'translate(460px,-28px) rotate(22deg)'
-                : 'translate(-460px,-28px) rotate(-22deg)';
+                ? 'translate(460px, calc(-50% - 28px)) rotate(22deg)'
+                : 'translate(-460px, calc(-50% - 28px)) rotate(-22deg)';
             card.style.opacity = '0';
         }
 
@@ -373,18 +424,6 @@ export default function SwipePage() {
 
     return (
         <div className="swipe-page">
-            {/* STATUS BAR */}
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             {/* TOP BAR */}
             <div className="sw-top-bar">
@@ -420,6 +459,7 @@ export default function SwipePage() {
                                 cardRef={ref}
                                 onSwipe={i === 0 ? handleSwipe : () => {}}
                                 onLocationClick={setLocItem}
+                                navigate={navigate}
                             />
                         );
                     })}

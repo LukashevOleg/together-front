@@ -79,16 +79,8 @@ export default function InvitationsPage() {
     const incoming = events.filter(e => e.receiverId === userId && e.status === 'PENDING');
     const outgoing = events.filter(e => e.inviterId  === userId && e.status === 'PENDING');
 
-    const handleCardClick = (event, isReceiver) => {
-        navigate(`/ideas/${event.ideaId}`, {
-            state: {
-                mode:         isReceiver ? 'incoming' : 'outgoing',
-                eventId:      event.id,
-                event,
-                // имя для пометки сюрприза у отправителя
-                receiverName: event.receiverName || null,
-            },
-        });
+    const handleCardClick = (event) => {
+        navigate('/chats', { state: { eventId: event.id, from: 'invitations' } });
     };
 
     const tabs = [
@@ -99,17 +91,6 @@ export default function InvitationsPage() {
 
     return (
         <div className="inv-page">
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             <div className="inv-header">
                 <button className="inv-btn-back" onClick={() => navigate('/lubimka')}>
@@ -154,7 +135,7 @@ export default function InvitationsPage() {
                             key={event.id}
                             event={event}
                             isReceiver={activeTab === 0}
-                            onClick={() => handleCardClick(event, activeTab === 0)}
+                            onClick={() => handleCardClick(event)}
                         />
                     ))
                 )}

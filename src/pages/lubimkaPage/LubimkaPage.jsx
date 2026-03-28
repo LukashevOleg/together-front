@@ -185,12 +185,6 @@ export default function LubimkaPage() {
 
     return (
         <div className="lb2-page">
-            <div className="lb2-status-bar">
-                <span>9:41</span>
-                <div className="lb2-status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="6" width="3" height="12" rx="1"/><rect x="6" y="9" width="3" height="9" rx="1"/><rect x="11" y="5" width="3" height="13" rx="1"/><rect x="16" y="2" width="3" height="16" rx="1"/></svg>
-                </div>
-            </div>
 
             <div className="lb2-scroll">
                 {/* HEADER */}

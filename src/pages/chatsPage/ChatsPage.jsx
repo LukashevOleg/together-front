@@ -246,9 +246,10 @@ function ChatScreen({ event: initialEvent, userId, onClose, from, myProfile, par
     const myAvatarUrl      = myProfile?.avatarUrl || null;
     const partnerAvatarUrl = partnerProfile?.avatarUrl || null;
 
-    // Кнопка назад — если пришли из Lubimka, возвращаемся туда
+    // Кнопка назад — если пришли из Lubimka или Invitations, возвращаемся туда
     const handleBack = () => {
-        if (from === 'lubimka') { navigate('/lubimka'); }
+        if (from === 'lubimka')      { navigate('/lubimka'); }
+        else if (from === 'invitations') { navigate('/invitations'); }
         else { onClose(); }
     };
 
@@ -258,6 +259,7 @@ function ChatScreen({ event: initialEvent, userId, onClose, from, myProfile, par
     const titleShown = getEventTitle(event, userId);
     const isPending  = event.status === 'PENDING';
     const isReceiver = event.receiverId === userId;
+    const isSurpriseForMe = event.isSurprise && isReceiver;
     const [infoOpen, setInfoOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -283,22 +285,30 @@ function ChatScreen({ event: initialEvent, userId, onClose, from, myProfile, par
 
     return (
         <div className="ch-screen open">
-            <div className="ch-screen-status"><span>9:41</span></div>
 
             <div className="ch-topbar">
                 <button className="ch-btn-back" onClick={handleBack}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="ch-topbar-ava" style={{
-                    background: coverUrl ? 'none' : bg,
-                    overflow: 'hidden',
-                }}>
+                <div
+                    className="ch-topbar-ava"
+                    style={{
+                        background: coverUrl ? 'none' : bg,
+                        overflow: 'hidden',
+                        cursor: (!isSurpriseForMe) ? 'pointer' : 'default',
+                    }}
+                    onClick={() => !isSurpriseForMe && navigate(`/ideas/${event.ideaId}`)}
+                >
                     {coverUrl
                         ? <img src={coverUrl} alt="сюрприз" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                         : emoji
                     }
                 </div>
-                <div className="ch-topbar-info">
+                <div
+                    className="ch-topbar-info"
+                    style={{ cursor: (!isSurpriseForMe) ? 'pointer' : 'default' }}
+                    onClick={() => !isSurpriseForMe && navigate(`/ideas/${event.ideaId}`)}
+                >
                     <div className="ch-topbar-title">{titleShown}</div>
                     <div className="ch-topbar-sub">
                         <StatusBadge status={event.status} />
@@ -706,17 +716,6 @@ export default function ChatsPage() {
 
     return (
         <div className="chats-page">
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             <div className="ch-top-bar">
                 <div className="ch-top-title">Чаты <span>свиданий</span></div>

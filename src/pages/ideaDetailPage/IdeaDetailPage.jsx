@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getIdeaById, saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
 import { createDateEvent, acceptDateEvent, declineDateEvent, cancelDateEvent } from '../../api/datingApi';
 import { getPartner } from '../../api/profilerApi';
+import { getReviews } from '../../api/allstatApi';
 import { SURPRISE_IMAGE, SURPRISE_TITLE } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
 import './IdeaDetailPage.css';
@@ -171,8 +172,9 @@ export default function IdeaDetailPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [sending,   setSending]   = useState(false);
     const [toast,     setToast]     = useState('');
+    const [reviews,   setReviews]   = useState(null); // { reviews, totalElements, averageRating, reviewCount }
 
-    // Загружаем идею и партнёра параллельно
+    // Загружаем идею, партнёра и отзывы параллельно
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
@@ -180,11 +182,13 @@ export default function IdeaDetailPage() {
             getIdeaById(id),
             getPartner().catch(() => null),
             getSaveStatus(id).catch(() => ({ saved: false })),
-        ]).then(([ideaData, partner, savedStatus]) => {
+            getReviews(id, 0, 5).catch(() => null),
+        ]).then(([ideaData, partner, savedStatus, reviewData]) => {
             if (cancelled) return;
             setIdea(ideaData);
             setPartnerId(partner?.id ?? null);
             setSaved(savedStatus.saved);
+            setReviews(reviewData);
             setLoading(false);
         }).catch(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
@@ -306,17 +310,6 @@ export default function IdeaDetailPage() {
 
     return (
         <div className="idea-detail-page">
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             <div className="id-scroll">
                 <div className="id-hero" style={!cover ? { background: bgGrad } : {}}>
@@ -377,6 +370,71 @@ export default function IdeaDetailPage() {
                                     <div className="id-location-text">{idea.address || idea.location}</div>
                                     {idea.address && idea.location && <div className="id-location-sub">{idea.location}</div>}
                                 </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* ── ОТЗЫВЫ ────────────────────────────────────────── */}
+                    {reviews && (
+                        <>
+                            <div className="id-divider" />
+                            <div className="id-reviews-block">
+                                <div className="id-reviews-header">
+                                    <span className="id-reviews-title">Отзывы</span>
+                                    {reviews.averageRating ? (
+                                        <div className="id-reviews-avg">
+                                            <span className="id-reviews-stars">
+                                                {[1,2,3,4,5].map(s => (
+                                                    <span key={s} style={{ color: s <= Math.round(reviews.averageRating) ? '#6D1A36' : '#ddd' }}>★</span>
+                                                ))}
+                                            </span>
+                                            <span className="id-reviews-avg-val">{reviews.averageRating.toFixed(1)}</span>
+                                            <span className="id-reviews-avg-count">({reviews.reviewCount})</span>
+                                        </div>
+                                    ) : (
+                                        <span style={{ fontSize:13, color:'#bbb' }}>Нет оценок</span>
+                                    )}
+                                </div>
+
+                                {reviews.reviews?.length > 0 ? (
+                                    <>
+                                        {reviews.reviews.map(r => (
+                                            <div key={r.id} className="id-review-item">
+                                                <div className="id-review-top">
+                                                    <div className="id-review-avatar">{(r.authorName || '?')[0]}</div>
+                                                    <div className="id-review-meta">
+                                                        <div className="id-review-author">{r.authorName || 'Пользователь'}</div>
+                                                        <span style={{ fontSize:12 }}>
+                                                            {[1,2,3,4,5].map(s => (
+                                                                <span key={s} style={{ color: s <= r.rating ? '#6D1A36' : '#ddd', fontSize:12 }}>★</span>
+                                                            ))}
+                                                        </span>
+                                                    </div>
+                                                    <div className="id-review-date">
+                                                        {new Date(r.createdAt).toLocaleDateString('ru-RU', { day:'numeric', month:'short' })}
+                                                    </div>
+                                                </div>
+                                                {r.comment && <div className="id-review-comment">{r.comment}</div>}
+                                            </div>
+                                        ))}
+
+                                        {reviews.totalElements > 5 && (
+                                            <button
+                                                className="id-reviews-see-all"
+                                                onClick={() => navigate(`/reviews/${id}`)}
+                                            >
+                                                Смотреть все {reviews.totalElements} отзывов
+                                                <svg viewBox="0 0 24 24" width="14" height="14" style={{ marginLeft:4 }}>
+                                                    <polyline points="9 18 15 12 9 6" stroke="currentColor" strokeWidth="2" fill="none"/>
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div style={{ fontSize:13, color:'#bbb', textAlign:'center', padding:'12px 0' }}>
+                                        Отзывов пока нет — будьте первым!
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}

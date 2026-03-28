@@ -1,0 +1,116 @@
+.irb-root {
+    margin: 16px 0;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+
+.irb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.irb-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.irb-avg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.irb-avg-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: #6D1A36;
+}
+
+.irb-avg-count {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.irb-no-rating {
+    font-size: 13px;
+    color: #bbb;
+}
+
+/* Stars */
+.irb-stars { display: inline-flex; gap: 1px; }
+.irb-star-on  { color: #6D1A36; }
+.irb-star-off { color: #ddd; }
+
+/* List */
+.irb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.irb-item {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f4f4f4;
+}
+.irb-item:last-of-type { border-bottom: none; padding-bottom: 0; }
+
+.irb-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.irb-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #6D1A36;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.irb-meta { flex: 1; }
+.irb-name  { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.irb-date  { font-size: 11px; color: #bbb; }
+
+.irb-comment {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+    padding-left: 36px;
+}
+
+.irb-empty {
+    font-size: 13px;
+    color: #bbb;
+    text-align: center;
+    padding: 12px 0;
+}
+
+.irb-see-all {
+    width: 100%;
+    background: none;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    color: #6D1A36;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+}

@@ -1,39 +1,106 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMatches }  from '../../api/swipesApi';
+import { getIdeaById } from '../../api/ideaApi';
 import { categoryEmoji, categoryGradient } from '../../api/datingApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './MatchesPage.css';
+
+const CATEGORY_LABEL = {
+    ROMANTIC:'Романтика', FOOD:'Гастро', OUTDOOR:'Природа',
+    CULTURE:'Культура', RELAX:'Релакс', ACTIVE:'Активное',
+    ENTERTAINMENT:'Развлечение', INDOOR:'Дома', WELLNESS:'Велнес',
+    EXTREME:'Экстрим', NIGHTLIFE:'Ночные', CREATIVE:'Творчество', OTHER:'Другое',
+};
 
 function formatPrice(p) {
     if (!p) return 'Бесплатно';
     return `от ${Number(p).toLocaleString('ru-RU')} ₽`;
 }
+function formatDuration(min) {
+    if (!min) return null;
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? `${h} ч ${m} мин` : `${h} ч`;
+}
+
+function MatchCard({ match, idea, onClick }) {
+    const bg    = categoryGradient(match.ideaCategory);
+    const emoji = categoryEmoji(match.ideaCategory);
+    const label = CATEGORY_LABEL[match.ideaCategory] || '';
+
+    const rating   = idea?.rating;
+    const price    = idea?.priceFrom;
+    const duration = idea?.durationMin;
+    const cover    = idea?.photos?.[0]?.url || idea?.coverPhotoUrl || null;
+
+    return (
+        <div className="mp-card" onClick={onClick}>
+            {/* Фото или градиент */}
+            <div className="mp-card-img" style={cover ? {} : { background: bg }}>
+                {cover
+                    ? <img src={cover} alt={match.ideaTitle} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    : emoji
+                }
+            </div>
+
+            <div className="mp-card-body">
+                {/* Тег категории сверху */}
+                {label && (
+                    <div className="mp-card-tag">
+                        {emoji} {label}
+                    </div>
+                )}
+
+                {/* Название */}
+                <div className="mp-card-title">{match.ideaTitle}</div>
+
+                {/* Рейтинг */}
+                {rating > 0 && (
+                    <div className="mp-card-rating">
+                        <span className="mp-star">★</span>
+                        <span className="mp-rating-val">{Number(rating).toFixed(1)}</span>
+                        {idea?.reviewsCount > 0 && (
+                            <span className="mp-rating-count">({idea.reviewsCount})</span>
+                        )}
+                    </div>
+                )}
+
+                {/* Цена и длительность снизу */}
+                <div className="mp-card-meta">
+                    <span>{formatPrice(price)}</span>
+                    {duration && <span style={{ marginLeft:'auto' }}>⏱ {formatDuration(duration)}</span>}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function MatchesPage() {
     const navigate = useNavigate();
-    const [matches, setMatches] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [matches,   setMatches]   = useState([]);
+    const [ideaMap,   setIdeaMap]   = useState({}); // ideaId → idea
+    const [loading,   setLoading]   = useState(true);
 
     useEffect(() => {
         getMatches()
-            .then(data => { setMatches(data); setLoading(false); })
+            .then(async data => {
+                setMatches(data || []);
+                setLoading(false);
+                // Подгружаем детали каждой идеи параллельно
+                const map = {};
+                await Promise.all((data || []).map(async m => {
+                    try {
+                        const idea = await getIdeaById(m.ideaId);
+                        map[m.ideaId] = idea;
+                    } catch {}
+                }));
+                setIdeaMap(map);
+            })
             .catch(() => setLoading(false));
     }, []);
 
     return (
         <div className="mp-page">
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             <div className="mp-header">
                 <div className="mp-back-row">
@@ -64,25 +131,12 @@ export default function MatchesPage() {
                     </div>
                 ) : (
                     matches.map(m => (
-                        <div
+                        <MatchCard
                             key={m.id}
-                            className="mp-card"
+                            match={m}
+                            idea={ideaMap[m.ideaId] || null}
                             onClick={() => navigate(`/ideas/${m.ideaId}`)}
-                        >
-                            <div className="mp-card-img"
-                                 style={{ background: categoryGradient(m.ideaCategory) }}>
-                                {categoryEmoji(m.ideaCategory)}
-                            </div>
-                            <div className="mp-card-body">
-                                <div className="mp-match-tag">
-                                    <svg viewBox="0 0 24 24" width="10" height="10">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="#7B1E2E" stroke="none"/>
-                                    </svg>
-                                    Совпадение
-                                </div>
-                                <div className="mp-card-title">{m.ideaTitle}</div>
-                            </div>
-                        </div>
+                        />
                     ))
                 )}
                 <div style={{ height: 16 }} />

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMatches }  from '../../api/swipesApi';
-import { getMyIdeas, getSavedIdeas } from '../../api/ideaApi';
+import { getMyIdeas, getSavedIdeas, getIdeaById } from '../../api/ideaApi';
 import { categoryEmoji, categoryGradient } from '../../api/datingApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './DateModePage.css';
@@ -29,6 +29,55 @@ function formatWeekday(dateStr) {
     return days[new Date(dateStr).getDay()];
 }
 
+const CATEGORY_LABEL = {
+    ROMANTIC:'Романтика', FOOD:'Гастро', OUTDOOR:'Природа',
+    CULTURE:'Культура', RELAX:'Релакс', ACTIVE:'Активное',
+    ENTERTAINMENT:'Развлечение', INDOOR:'Дома', WELLNESS:'Велнес',
+    EXTREME:'Экстрим', NIGHTLIFE:'Ночные', CREATIVE:'Творчество', OTHER:'Другое',
+};
+
+// Единая карточка для всех трёх панелей
+function DmCard({ category, title, price, duration, rating, reviewsCount, coverUrl, variant = 'match', onClick }) {
+    const bg    = categoryGradient(category);
+    const emoji = categoryEmoji(category);
+    const label = CATEGORY_LABEL[category] || '';
+    const cls   = variant === 'match' ? 'dm-match-card' : 'dm-idea-card';
+
+    return (
+        <div className={cls} onClick={onClick}>
+            <div className="dm-card-img" style={coverUrl ? {} : { background: bg }}>
+                {coverUrl
+                    ? <img src={coverUrl} alt={title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    : emoji
+                }
+            </div>
+            <div className="dm-card-body">
+                {/* Тег категории */}
+                {label && (
+                    <div className="dm-card-tag">
+                        {emoji} {label}
+                    </div>
+                )}
+                {/* Название */}
+                <div className="dm-card-title">{title}</div>
+                {/* Рейтинг */}
+                {rating > 0 && (
+                    <div className="dm-card-rating">
+                        <span className="dm-star">★</span>
+                        <span className="dm-rating-val">{Number(rating).toFixed(1)}</span>
+                        {reviewsCount > 0 && <span className="dm-rating-count">({reviewsCount})</span>}
+                    </div>
+                )}
+                {/* Цена влево, длительность вправо */}
+                <div className="dm-card-meta">
+                    <span>{price ? formatPrice(price) : 'Бесплатно'}</span>
+                    {duration && <span style={{ marginLeft: 'auto' }}>⏱ {formatDuration(duration)}</span>}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function todayISO() {
     return new Date().toISOString().split('T')[0];
 }
@@ -48,9 +97,10 @@ export default function DateModePage({ mode }) {
     const [selectedDate, setSelectedDate] = useState(todayISO);
 
     // Data
-    const [matches,   setMatches]   = useState([]);
-    const [savedIdeas, setSavedIdeas] = useState([]);
-    const [myIdeas,   setMyIdeas]   = useState([]);
+    const [matches,     setMatches]     = useState([]);
+    const [matchIdeaMap, setMatchIdeaMap] = useState({}); // ideaId → full idea
+    const [savedIdeas,  setSavedIdeas]  = useState([]);
+    const [myIdeas,     setMyIdeas]     = useState([]);
     const [dataLoading, setDataLoading] = useState(true);
 
     useEffect(() => {
@@ -66,6 +116,11 @@ export default function DateModePage({ mode }) {
             setSavedIdeas(savedData);
             setMyIdeas(myIdeasPage.content || []);
             setDataLoading(false);
+            // Подгружаем детали идей для совпадений
+            const map = {};
+            Promise.all((matchesData || []).map(async m => {
+                try { map[m.ideaId] = await getIdeaById(m.ideaId); } catch {}
+            })).then(() => { if (!cancelled) setMatchIdeaMap({ ...map }); });
         });
         return () => { cancelled = true; };
     }, []);
@@ -149,18 +204,6 @@ export default function DateModePage({ mode }) {
     // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="date-mode-page">
-            {/* STATUS BAR */}
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             {/* HEADER */}
             <div className="dm-header">
@@ -270,17 +313,23 @@ export default function DateModePage({ mode }) {
                             </div>
                         ) : matches.length > 0 ? (
                             <>
-                                {matches.map(m => (
-                                    <div key={m.id} className="dm-match-card" onClick={() => goToIdea(m.ideaId)}>
-                                        <div className="dm-card-img"
-                                             style={{ background: categoryGradient(m.ideaCategory) }}>
-                                            {categoryEmoji(m.ideaCategory)}
-                                        </div>
-                                        <div className="dm-card-body">
-                                            <div className="dm-card-title">{m.ideaTitle}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                                {matches.map(m => {
+                                    const idea = matchIdeaMap[m.ideaId];
+                                    return (
+                                        <DmCard
+                                            key={m.id}
+                                            category={m.ideaCategory}
+                                            title={m.ideaTitle}
+                                            price={idea?.priceFrom}
+                                            duration={idea?.durationMin}
+                                            rating={idea?.rating}
+                                            reviewsCount={idea?.reviewsCount}
+                                            coverUrl={idea?.photos?.[0]?.url || idea?.coverPhotoUrl}
+                                            variant="match"
+                                            onClick={() => goToIdea(m.ideaId)}
+                                        />
+                                    );
+                                })}
                                 <button className="dm-see-all" onClick={() => navigate('/lubimka')}>
                                     Все совпадения
                                     <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -306,21 +355,18 @@ export default function DateModePage({ mode }) {
                         ) : savedIdeas.length > 0 ? (
                             <>
                                 {savedIdeas.map(idea => (
-                                    <div key={idea.id} className="dm-idea-card" onClick={() => goToIdea(idea.id)}>
-                                        <div className="dm-card-img"
-                                             style={{ background: categoryGradient(idea.category) }}>
-                                            {categoryEmoji(idea.category)}
-                                        </div>
-                                        <div className="dm-card-body">
-                                            <div className="dm-card-title">{idea.title}</div>
-                                            <div className="dm-card-meta">
-                                                {[
-                                                    idea.priceFrom ? formatPrice(idea.priceFrom) : 'Бесплатно',
-                                                    idea.durationMin ? formatDuration(idea.durationMin) : null,
-                                                ].filter(Boolean).join(' · ')}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <DmCard
+                                        key={idea.id}
+                                        category={idea.category}
+                                        title={idea.title}
+                                        price={idea.priceFrom}
+                                        duration={idea.durationMin}
+                                        rating={idea.rating}
+                                        reviewsCount={idea.reviewsCount}
+                                        coverUrl={idea.photos?.[0]?.url || idea.coverPhotoUrl}
+                                        variant="idea"
+                                        onClick={() => goToIdea(idea.id)}
+                                    />
                                 ))}
                                 <button className="dm-see-all" onClick={() => navigate('/ideas/feed')}>
                                     Все сохранённые
@@ -347,21 +393,18 @@ export default function DateModePage({ mode }) {
                         ) : myIdeas.length > 0 ? (
                             <>
                                 {myIdeas.map(idea => (
-                                    <div key={idea.id} className="dm-idea-card" onClick={() => goToIdea(idea.id)}>
-                                        <div className="dm-card-img"
-                                             style={{ background: categoryGradient(idea.category) }}>
-                                            {categoryEmoji(idea.category)}
-                                        </div>
-                                        <div className="dm-card-body">
-                                            <div className="dm-card-title">{idea.title}</div>
-                                            <div className="dm-card-meta">
-                                                {[
-                                                    idea.priceFrom ? formatPrice(idea.priceFrom) : 'Бесплатно',
-                                                    idea.durationMin ? formatDuration(idea.durationMin) : null,
-                                                ].filter(Boolean).join(' · ')}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <DmCard
+                                        key={idea.id}
+                                        category={idea.category}
+                                        title={idea.title}
+                                        price={idea.priceFrom}
+                                        duration={idea.durationMin}
+                                        rating={idea.rating}
+                                        reviewsCount={idea.reviewsCount}
+                                        coverUrl={idea.photos?.[0]?.url || idea.coverPhotoUrl}
+                                        variant="idea"
+                                        onClick={() => goToIdea(idea.id)}
+                                    />
                                 ))}
                                 <button className="dm-see-all" onClick={() => navigate('/ideas/feed')}>
                                     Все ваши идеи

@@ -22,6 +22,7 @@ import MatchesPage      from './pages/matchesPage/MatchesPage';
 import InvitationsPage  from './pages/invitationsPage/InvitationsPage';
 import StatsPage from './pages/statsPage/StatsPage';
 import HistoryPage      from './pages/historyPage/HistoryPage';
+import ReviewsPage      from './pages/reviewsPage/ReviewsPage';
 
 import './styles/globals.css';
 
@@ -73,6 +74,7 @@ function AppRoutes() {
             <Route path="/history"      element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
             <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
+            <Route path="/reviews/:ideaId" element={<ReviewsPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

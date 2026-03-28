@@ -437,3 +437,93 @@
 }
 .id-modal-send:active { background: #7B1E2E; }
 .id-modal-send svg { width: 17px; height: 17px; }
+
+/* ── Reviews block inside IdeaDetailPage ── */
+.id-reviews-block {
+    margin: 0 0 4px;
+}
+.id-reviews-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.id-reviews-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+.id-reviews-avg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.id-reviews-stars { display: inline-flex; gap: 1px; font-size: 13px; }
+.id-reviews-avg-val   { font-size: 13px; font-weight: 700; color: #6D1A36; }
+.id-reviews-avg-count { font-size: 12px; color: #aaa; }
+
+.id-review-item {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 12px;
+}
+.id-review-item:last-of-type { border-bottom: none; margin-bottom: 0; }
+
+.id-review-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.id-review-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #6D1A36; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+    text-transform: uppercase;
+}
+.id-review-meta  { flex: 1; }
+.id-review-author { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.id-review-date   { font-size: 11px; color: #bbb; }
+.id-review-comment {
+    font-size: 13px; color: #555; line-height: 1.5;
+    padding-left: 36px;
+}
+.id-reviews-see-all {
+    width: 100%;
+    background: none;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    color: #6D1A36;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+/* ── CalendarPage back button ── */
+.cal-back-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.cal-back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.cal-page-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #444;
+}

@@ -1,0 +1,145 @@
+/* ── Overlay ── */
+.srm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 500;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: srm-fade-in .18s ease;
+}
+
+@keyframes srm-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── Bottom Sheet ── */
+.srm-sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 24px 36px;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: srm-slide-up .22s ease;
+}
+
+@keyframes srm-slide-up {
+    from { transform: translateY(60px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+}
+
+.srm-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.srm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.srm-idea-name {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* ── Stars ── */
+.srm-stars {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.srm-star {
+    font-size: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ddd;
+    transition: color .15s, transform .12s;
+    padding: 0;
+    line-height: 1;
+}
+
+.srm-star.active {
+    color: #6D1A36;  /* Burgundy */
+}
+
+.srm-star:hover {
+    transform: scale(1.15);
+}
+
+.srm-rating-label {
+    font-size: 14px;
+    color: #6D1A36;
+    font-weight: 600;
+    margin-bottom: 16px;
+    min-height: 20px;
+}
+
+/* ── Textarea ── */
+.srm-textarea {
+    width: 100%;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    color: #333;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    transition: border-color .15s;
+}
+
+.srm-textarea:focus {
+    border-color: #6D1A36;
+}
+
+.srm-error {
+    color: #e53935;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+/* ── Buttons ── */
+.srm-submit {
+    width: 100%;
+    padding: 14px;
+    background: #6D1A36;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background .15s, opacity .15s;
+}
+
+.srm-submit:disabled {
+    opacity: .6;
+}
+
+.srm-cancel {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 4px;
+}

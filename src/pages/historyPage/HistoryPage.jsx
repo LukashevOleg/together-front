@@ -1,8 +1,96 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDateHistory, categoryEmoji, categoryGradient } from '../../api/datingApi';
+import { submitReview, getMyReview } from '../../api/allstatApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './HistoryPage.css';
+
+// ── Модал оценки ────────────────────────────────────────────────────────────
+function StarModal({ event, existingRating, onSubmit, onClose }) {
+    const [rating,  setRating]  = useState(existingRating || 0);
+    const [hovered, setHovered] = useState(0);
+    const [comment, setComment] = useState('');
+    const [busy,    setBusy]    = useState(false);
+    const [err,     setErr]     = useState('');
+    const LABELS = ['','Ужасно 😞','Плохо 😕','Нормально 😐','Хорошо 😊','Отлично! 🥰'];
+
+    const send = async () => {
+        if (!rating) { setErr('Выберите оценку'); return; }
+        setBusy(true);
+        try { await onSubmit(rating, comment.trim() || null); onClose(); }
+        catch { setErr('Не удалось отправить'); }
+        finally { setBusy(false); }
+    };
+
+    return (
+        <div onClick={onClose} style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,.45)',
+            zIndex:500, display:'flex', alignItems:'flex-end', justifyContent:'center',
+        }}>
+            <div onClick={e => e.stopPropagation()} style={{
+                background:'#fff', borderRadius:'20px 20px 0 0',
+                padding:'12px 24px 44px', width:'100%', maxWidth:480,
+                display:'flex', flexDirection:'column', alignItems:'center',
+            }}>
+                {/* Handle */}
+                <div style={{ width:40, height:4, borderRadius:2, background:'#e0e0e0', marginBottom:20 }} />
+
+                <div style={{ fontSize:18, fontWeight:700, color:'#111', marginBottom:4 }}>Оцените свидание</div>
+                <div style={{ fontSize:13, color:'#888', marginBottom:20, textAlign:'center' }}>{event.ideaTitle}</div>
+
+                {/* Звёзды бургунди */}
+                <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                    {[1,2,3,4,5].map(s => (
+                        <button key={s}
+                                onClick={() => { setRating(s); setErr(''); }}
+                                onMouseEnter={() => setHovered(s)}
+                                onMouseLeave={() => setHovered(0)}
+                                style={{
+                                    fontSize:46, background:'none', border:'none', cursor:'pointer', padding:0, lineHeight:1,
+                                    color: s <= (hovered || rating) ? '#6D1A36' : '#e0e0e0',
+                                    transform: s <= (hovered || rating) ? 'scale(1.12)' : 'scale(1)',
+                                    transition:'color .12s, transform .12s',
+                                }}
+                        >★</button>
+                    ))}
+                </div>
+
+                <div style={{ fontSize:14, color:'#6D1A36', fontWeight:600, minHeight:22, marginBottom:14 }}>
+                    {LABELS[hovered || rating]}
+                </div>
+
+                <textarea
+                    placeholder="Комментарий (необязательно)…"
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    style={{
+                        width:'100%', boxSizing:'border-box',
+                        border:'1.5px solid #e8e8e8', borderRadius:12,
+                        padding:12, fontSize:14, fontFamily:'inherit',
+                        resize:'none', outline:'none', marginBottom:8,
+                    }}
+                    onFocus={e => e.target.style.borderColor = '#6D1A36'}
+                    onBlur={e => e.target.style.borderColor = '#e8e8e8'}
+                />
+
+                {err && <div style={{ color:'#e53935', fontSize:13, marginBottom:6 }}>{err}</div>}
+
+                <button onClick={send} disabled={busy} style={{
+                    width:'100%', padding:14, background:'#6D1A36', color:'#fff',
+                    border:'none', borderRadius:14, fontSize:15, fontWeight:600,
+                    cursor:'pointer', opacity: busy ? .6 : 1, marginTop:4,
+                }}>{busy ? 'Отправляем…' : 'Отправить отзыв'}</button>
+
+                <button onClick={onClose} style={{
+                    background:'none', border:'none', color:'#aaa',
+                    fontSize:14, cursor:'pointer', marginTop:12,
+                }}>Отмена</button>
+            </div>
+        </div>
+    );
+}
 
 const CATEGORY_LABEL = {
     ROMANTIC:      'Романтика',
@@ -56,36 +144,75 @@ function groupByMonth(events) {
 
 export default function HistoryPage() {
     const navigate = useNavigate();
-    const [events,  setEvents]  = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [events,      setEvents]      = useState([]);
+    const [loading,     setLoading]     = useState(true);
+    const [modalEvent,  setModalEvent]  = useState(null);   // event для модала
+    const [myReviews,   setMyReviews]   = useState({});     // ideaId → { rating, comment }
+    const [editingId,   setEditingId]   = useState(null);   // ideaId с раскрытым комментарием
+    const [editText,    setEditText]    = useState('');
+    const [toast,       setToast]       = useState('');
 
     useEffect(() => {
         getDateHistory()
-            .then(data => { setEvents(data || []); setLoading(false); })
+            .then(async data => {
+                const list = data || [];
+                setEvents(list);
+                setLoading(false);
+                // Подгружаем мои отзывы для завершённых свиданий
+                const ideaIds = [...new Set(
+                    list.filter(e => e.ideaId).map(e => e.ideaId)
+                )];
+                const map = {};
+                await Promise.all(ideaIds.map(async id => {
+                    try {
+                        const r = await getMyReview(id);
+                        if (r) map[id] = { rating: r.rating, comment: r.comment || '' };
+                    } catch {}
+                }));
+                setMyReviews(map);
+            })
             .catch(() => setLoading(false));
     }, []);
 
-    const totalDates = events.length;
+    const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2200); };
 
-    // Средний рейтинг — пока заглушка 0, когда подключим рейтинги обновим
-    const avgRating  = 0;
+    const handleReviewSubmit = async (rating, comment) => {
+        await submitReview({
+            ideaId:    modalEvent.ideaId,
+            ideaTitle: modalEvent.ideaTitle,
+            rating,
+            comment,
+        });
+        setMyReviews(prev => ({ ...prev, [modalEvent.ideaId]: { rating, comment: comment || '' } }));
+        showToast('Отзыв сохранён ⭐');
+    };
+
+    const handleCommentEdit = async (ideaId) => {
+        const cur = myReviews[ideaId];
+        if (!cur) return;
+        try {
+            await submitReview({
+                ideaId,
+                ideaTitle: events.find(e => e.ideaId === ideaId)?.ideaTitle || '',
+                rating: cur.rating,
+                comment: editText.trim() || null,
+            });
+            setMyReviews(prev => ({ ...prev, [ideaId]: { ...prev[ideaId], comment: editText.trim() } }));
+            setEditingId(null);
+            showToast('Комментарий сохранён');
+        } catch { showToast('Ошибка сохранения'); }
+    };
+
+    const totalDates = events.length;
+    const ratingValues = Object.values(myReviews).map(r => r.rating);
+    const avgRating = ratingValues.length > 0
+        ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+        : 0;
 
     const groups = groupByMonth(events);
 
     return (
         <div className="history-page">
-            {/* STATUS BAR */}
-            <div className="status-bar">
-                <span>9:41</span>
-                <div className="status-icons">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="1" y="6" width="3" height="12" rx="1"/>
-                        <rect x="6" y="9" width="3" height="9" rx="1"/>
-                        <rect x="11" y="5" width="3" height="13" rx="1"/>
-                        <rect x="16" y="2" width="3" height="16" rx="1"/>
-                    </svg>
-                </div>
-            </div>
 
             {/* HEADER */}
             <div className="history-header">
@@ -115,7 +242,7 @@ export default function HistoryPage() {
                                 <div className="sum-num burgundy">
                                     {avgRating > 0 ? avgRating.toFixed(1) : '—'}
                                 </div>
-                                <div className="sum-lbl">средний рейтинг</div>
+                                <div className="sum-lbl">ваша средняя оценка</div>
                             </div>
                         </div>
 
@@ -135,29 +262,102 @@ export default function HistoryPage() {
                                         {monthLabel(key)}
                                     </div>
                                     {monthEvents.map(event => {
-                                        const bg    = categoryGradient(event.ideaCategory);
-                                        const emoji = categoryEmoji(event.ideaCategory);
-                                        const catLabel = CATEGORY_LABEL[event.ideaCategory] || '';
+                                        const bg      = categoryGradient(event.ideaCategory);
+                                        const emoji   = categoryEmoji(event.ideaCategory);
+                                        const review  = myReviews[event.ideaId];
+                                        const isEditing = editingId === event.ideaId;
                                         return (
-                                            <div
-                                                key={event.id}
-                                                className="history-card"
-                                                onClick={() => navigate('/chats', { state: { eventId: event.id } })}
-                                            >
-                                                <div className="hc-img" style={{ background: bg }}>
-                                                    {emoji}
+                                            <div key={event.id} className="hc-wrap">
+                                                <div
+                                                    className="history-card"
+                                                    onClick={() => navigate('/chats', { state: { eventId: event.id } })}
+                                                >
+                                                    <div className="hc-img" style={{ background: bg }}>{emoji}</div>
+                                                    <div className="hc-body">
+                                                        <div className="hc-title">{event.ideaTitle}</div>
+                                                        <div className="hc-meta">
+                                                            <span>{formatCardDate(event.scheduledDate)}</span>
+                                                            {event.scheduledTime && <span>{event.scheduledTime.slice(0, 5)}</span>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="hc-body">
-                                                    <div className="hc-title">{event.ideaTitle}</div>
-                                                    <div className="hc-meta">
-                                                        {formatCardDate(event.scheduledDate)}
-                                                        {event.scheduledTime && ` · ${event.scheduledTime.slice(0, 5)}`}
-                                                    </div>
-                                                    <div className="hc-footer">
-                                                        {catLabel && (
-                                                            <span className="hc-tag">{catLabel}</span>
-                                                        )}
-                                                    </div>
+
+                                                {/* Нижняя строка */}
+                                                <div className="hc-bottom-row" onClick={e => e.stopPropagation()}>
+                                                    {review ? (
+                                                        isEditing ? (
+                                                            <div className="hc-edit-block">
+                                                                {/* Кликабельные звёзды в режиме редактирования */}
+                                                                <div className="hc-stars-picker">
+                                                                    {[1,2,3,4,5].map(s => (
+                                                                        <button
+                                                                            key={s}
+                                                                            className="hc-star-btn"
+                                                                            onClick={async () => {
+                                                                                const updated = { ...myReviews[event.ideaId], rating: s };
+                                                                                setMyReviews(prev => ({ ...prev, [event.ideaId]: updated }));
+                                                                                try {
+                                                                                    await submitReview({ ideaId: event.ideaId, ideaTitle: event.ideaTitle, rating: s, comment: updated.comment || null });
+                                                                                    showToast('Оценка изменена');
+                                                                                } catch {}
+                                                                            }}
+                                                                        >
+                                                                            {s <= review.rating ? '★' : '☆'}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                <textarea
+                                                                    className="hc-edit-textarea"
+                                                                    value={editText}
+                                                                    onChange={e => setEditText(e.target.value)}
+                                                                    rows={2}
+                                                                    maxLength={500}
+                                                                    autoFocus
+                                                                    placeholder="Комментарий…"
+                                                                    onClick={e => e.stopPropagation()}
+                                                                />
+                                                                <div className="hc-edit-actions">
+                                                                    <button className="hc-edit-cancel" onClick={() => setEditingId(null)}>Отмена</button>
+                                                                    <button className="hc-edit-save" onClick={() => handleCommentEdit(event.ideaId)}>Сохранить</button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="hc-reviewed-row">
+                                                                {/* Кликабельные звёзды */}
+                                                                <div className="hc-stars-picker">
+                                                                    {[1,2,3,4,5].map(s => (
+                                                                        <button
+                                                                            key={s}
+                                                                            className="hc-star-btn"
+                                                                            onClick={async () => {
+                                                                                const updated = { ...myReviews[event.ideaId], rating: s };
+                                                                                setMyReviews(prev => ({ ...prev, [event.ideaId]: updated }));
+                                                                                try {
+                                                                                    await submitReview({ ideaId: event.ideaId, ideaTitle: event.ideaTitle, rating: s, comment: updated.comment || null });
+                                                                                    showToast('Оценка изменена');
+                                                                                } catch {}
+                                                                            }}
+                                                                        >
+                                                                            {s <= review.rating ? '★' : '☆'}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                <span
+                                                                    className="hc-comment-text"
+                                                                    onClick={() => { setEditingId(event.ideaId); setEditText(review.comment || ''); }}
+                                                                >
+                                                                    {review.comment || 'Оставьте комментарий'}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    ) : (
+                                                        <>
+                                                            <span className="hc-bottom-label">Как прошло свидание?</span>
+                                                            <button className="hc-rate-link" onClick={() => setModalEvent(event)}>
+                                                                Оценить →
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -170,6 +370,27 @@ export default function HistoryPage() {
             </div>
 
             <BottomNav />
+
+            {/* Toast */}
+            {toast && (
+                <div style={{
+                    position:'fixed', bottom:84, left:'50%', transform:'translateX(-50%)',
+                    background:'rgba(26,26,26,.92)', color:'#fff',
+                    borderRadius:20, padding:'10px 20px',
+                    fontSize:14, fontWeight:500, zIndex:600, whiteSpace:'nowrap',
+                    pointerEvents:'none',
+                }}>{toast}</div>
+            )}
+
+            {/* Модал оценки */}
+            {modalEvent && (
+                <StarModal
+                    event={modalEvent}
+                    existingRating={myReviews[modalEvent.ideaId] || 0}
+                    onSubmit={handleReviewSubmit}
+                    onClose={() => setModalEvent(null)}
+                />
+            )}
         </div>
     );
 }

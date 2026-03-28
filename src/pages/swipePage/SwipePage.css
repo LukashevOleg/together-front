@@ -82,6 +82,7 @@
     position: relative;
     padding: 0 16px 6px;
     overflow: hidden;
+    min-height: 0;
 }
 
 .sw-card {
@@ -95,13 +96,18 @@
     user-select: none;
     will-change: transform;
     touch-action: none;
+    /* Карточка по высоте контента, выровнена по центру стека */
+    top: 50%;
+    transform: translateY(-50%);
 }
+.sw-card.pos-back1 { transform: scale(0.96) translateY(calc(-50% + 7px)); }
+.sw-card.pos-back2 { transform: scale(0.92) translateY(calc(-50% + 14px)); opacity: 0.6; }
 .sw-card:active { cursor: grabbing; }
 
 /* Stack positions */
-.sw-card.pos-front  { transform: scale(1) translateY(0);    z-index: 3; }
-.sw-card.pos-back1  { transform: scale(0.96) translateY(7px); z-index: 2; pointer-events: none; }
-.sw-card.pos-back2  { transform: scale(0.92) translateY(14px); z-index: 1; opacity: 0.6; pointer-events: none; }
+.sw-card.pos-front  { transform: translateY(-50%) scale(1); z-index: 3; }
+.sw-card.pos-back1  { transform: scale(0.96) translateY(calc(-50% + 7px)); z-index: 2; pointer-events: none; }
+.sw-card.pos-back2  { transform: scale(0.92) translateY(calc(-50% + 14px)); z-index: 1; opacity: 0.6; pointer-events: none; }
 
 /* Fly-out animations */
 .sw-card.fly-right {
@@ -124,14 +130,17 @@
 
 /* ── Card hero ───────────────────────────────────────────────────────────── */
 .sw-card-hero {
-    width: 100%; height: 185px;
-    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 220px;
     position: relative;
+    overflow: hidden;
     flex-shrink: 0;
 }
 .sw-card-hero-emoji {
-    font-size: 64px;
-    position: relative; z-index: 1;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 72px;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.3));
 }
 .sw-card-hero-img {
     position: absolute; inset: 0;
@@ -182,19 +191,19 @@
 
 /* ── Card body ───────────────────────────────────────────────────────────── */
 .sw-card-body {
-    padding: 10px 13px 13px;
+    padding: 16px 16px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
 }
-.sw-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.sw-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .sw-ctag {
     font-size: 11px; font-weight: 500;
     padding: 3px 9px;
     border-radius: 20px;
 }
 .sw-ctag.cat  { background: #F2E8EA; color: #7B1E2E; }
-.sw-ctag.info { background: #EBEBEB; color: #888; }
+.sw-ctag.info { background: #EBEBEB; color: #888; border: 1px solid #E5E3E0; }
 
 .sw-card-meta {
     display: flex;
@@ -471,4 +480,145 @@
 @keyframes swSlideUp {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
+}
+/* ── Card content (from HTML mockup) ──────────────────────────────────────── */
+.sw-card-title {
+    font-family: 'Cormorant', serif;
+    font-size: 22px; font-weight: 600;
+    line-height: 1.2;
+    color: #111;
+    margin-bottom: 10px;
+}
+.sw-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.sw-stars-wrap { display: flex; gap: 2px; }
+.sw-star-svg { width: 16px; height: 16px; display: block; }
+.sw-rating-num {
+    font-family: 'Cormorant', serif;
+    font-size: 18px; font-weight: 600;
+    color: #111;
+}
+.sw-rating-count { font-size: 11px; color: #888; }
+.sw-pairs-info {
+    margin-left: auto;
+    font-size: 11px; color: #888;
+    display: flex; align-items: center; gap: 3px;
+}
+.sw-pairs-info svg { width: 12px; height: 12px; stroke: #888; fill: none; stroke-width: 2; }
+.sw-desc-wrap { margin-bottom: 12px; }
+.sw-desc-text {
+    font-size: 13px; color: #888; line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.sw-desc-text.expanded { -webkit-line-clamp: unset; overflow: visible; }
+.sw-desc-toggle {
+    font-size: 12px; color: #7B1E2E;
+    cursor: pointer; margin-top: 3px;
+    display: inline-block;
+}
+.sw-btn-more {
+    width: 100%;
+    background: #EBEBEB;
+    border: 1.5px solid #E5E3E0;
+    border-radius: 14px;
+    padding: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: #111;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 2px;
+}
+.sw-btn-more svg { width: 14px; height: 14px; stroke: #7B1E2E; fill: none; stroke-width: 2; }
+
+
+/* ═══ Card content (exact match to screenshot) ═══ */
+
+.sw-card-content {
+    padding: 16px 16px 14px;
+}
+
+/* Название */
+.sw-card-title {
+    font-family: 'Cormorant', serif;
+    font-size: 22px; font-weight: 600;
+    line-height: 1.2; color: #111;
+    margin-bottom: 10px;
+}
+
+/* Теги */
+.sw-card-tags {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-bottom: 10px;
+}
+.sw-tag {
+    border-radius: 20px;
+    padding: 4px 11px;
+    font-size: 11px; font-weight: 500;
+}
+.sw-tag-cat  { background: #F2E8EA; color: #7B1E2E; }
+.sw-tag-info { background: #EBEBEB; color: #666; border: 1px solid #E5E3E0; }
+
+/* Рейтинг */
+.sw-rating-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+}
+.sw-stars-wrap { display: flex; gap: 2px; }
+.sw-rating-num {
+    font-family: 'Cormorant', serif;
+    font-size: 18px; font-weight: 600; color: #111;
+}
+.sw-rating-sub { font-size: 11px; color: #888; }
+.sw-pairs-info {
+    margin-left: auto;
+    font-size: 11px; color: #888;
+    display: flex; align-items: center; gap: 3px;
+}
+.sw-pairs-info svg {
+    width: 12px; height: 12px;
+    stroke: #888; fill: none; stroke-width: 2;
+}
+
+/* Описание */
+.sw-desc-wrap { margin-bottom: 12px; }
+.sw-desc-text {
+    font-size: 13px; color: #888; line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.sw-desc-text.expanded {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+.sw-desc-toggle {
+    font-size: 12px; color: #7B1E2E;
+    cursor: pointer; margin-top: 3px;
+    display: inline-block;
+}
+
+/* Кнопка */
+.sw-btn-more {
+    width: 100%;
+    background: #EBEBEB;
+    border: 1.5px solid #E5E3E0;
+    border-radius: 14px;
+    padding: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; color: #111;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.sw-btn-more svg {
+    width: 14px; height: 14px;
+    stroke: #7B1E2E; fill: none; stroke-width: 2;
 }

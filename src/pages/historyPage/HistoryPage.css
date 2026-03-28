@@ -78,49 +78,164 @@
     color: #7B1E2E;
 }
 
-/* Date card */
+/* Обёртка */
+.hc-wrap {
+    margin: 0 20px 14px;
+}
+
+/* Карточка */
 .history-card {
-    margin: 0 20px 10px;
     background: #fff;
-    border-radius: 20px;
-    border: 1.5px solid #E5E3E0;
+    border-radius: 20px 20px 0 0;
+    border: 1.5px solid #F2E8EA;
+    border-bottom: none;
     overflow: hidden;
-    cursor: pointer;
     display: flex;
     transition: opacity 0.15s;
     animation: histUp 0.3s ease both;
 }
-.history-card:active { opacity: 0.85; }
+
+/* Основная кликабельная часть */
+.hc-main {
+    display: flex;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.hc-main:active { opacity: 0.85; }
 
 .hc-img {
-    width: 88px;
+    width: 90px;
+    height: 90px;
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 36px;
 }
 .hc-body {
     flex: 1;
-    padding: 14px 14px 14px 12px;
+    padding: 10px 14px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 .hc-title {
     font-family: 'Cormorant', serif;
-    font-size: 17px; font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 4px;
+    font-size: 16px; font-weight: 600;
+    color: #111;
+    line-height: 1.25;
 }
-.hc-meta { font-size: 11px; color: #888; margin-bottom: 8px; }
-.hc-footer {
+.hc-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    font-size: 11px;
+    color: #888;
 }
-.hc-tag {
-    font-size: 10px;
-    background: #F2E8EA;
-    color: #7B1E2E;
-    border-radius: 20px;
-    padding: 3px 8px;
-    font-weight: 500;
+
+/* Нижняя строка — прикреплена к карточке */
+.hc-bottom-row {
+    background: #fff;
+    border-radius: 0 0 18px 18px;
+    border: 1.5px solid #F2E8EA;
+    border-top: 1px solid #F2E8EA;
+    margin-top: -2px;
+    padding: 8px 12px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.hc-bottom-label { font-size: 12px; color: #888; flex: 1; }
+
+.hc-rate-link {
+    font-size: 12px; font-weight: 500;
+    color: #6D1A36;
+    background: none; border: none;
+    cursor: pointer; padding: 0;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* После оценки */
+.hc-reviewed-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Кликабельные звёзды — пикер */
+.hc-stars-picker {
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+}
+.hc-star-btn {
+    font-size: 24px;
+    color: #6D1A36;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 1px;
+    line-height: 1;
+    transition: transform .1s;
+}
+.hc-star-btn:active { transform: scale(1.2); }
+
+.hc-comment-text {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    border-bottom: 1px dashed #bbb;
+    margin-left: auto;
+    max-width: 50%;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Раскрытый редактор */
+.hc-edit-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.hc-edit-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid #e0c8d0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    resize: none;
+    outline: none;
+    color: #111;
+    background: #fff;
+}
+
+.hc-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.hc-edit-cancel {
+    font-size: 12px; color: #aaa;
+    background: none; border: none;
+    cursor: pointer; padding: 0;
+}
+
+.hc-edit-save {
+    font-size: 12px; color: #6D1A36;
+    font-weight: 600;
+    background: none; border: none;
+    cursor: pointer; padding: 0;
 }
 
 /* Skeleton */

@@ -279,3 +279,17 @@
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+/* ── Back button — точная копия inv-btn-back ── */
+.cal-back-row {
+    margin-bottom: 8px;
+}
+.cal-btn-back {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid #E5E3E0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.cal-btn-back svg { width: 15px; height: 15px; stroke: #111; fill: none; stroke-width: 2.5; stroke-linecap: round; }
