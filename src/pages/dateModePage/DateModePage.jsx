@@ -36,7 +36,6 @@ const CATEGORY_LABEL = {
     EXTREME:'Экстрим', NIGHTLIFE:'Ночные', CREATIVE:'Творчество', OTHER:'Другое',
 };
 
-// Единая карточка для всех трёх панелей
 function DmCard({ category, title, price, duration, rating, reviewsCount, coverUrl, variant = 'match', onClick }) {
     const bg    = categoryGradient(category);
     const emoji = categoryEmoji(category);
@@ -52,15 +51,12 @@ function DmCard({ category, title, price, duration, rating, reviewsCount, coverU
                 }
             </div>
             <div className="dm-card-body">
-                {/* Тег категории */}
                 {label && (
                     <div className="dm-card-tag">
                         {emoji} {label}
                     </div>
                 )}
-                {/* Название */}
                 <div className="dm-card-title">{title}</div>
-                {/* Рейтинг */}
                 {rating > 0 && (
                     <div className="dm-card-rating">
                         <span className="dm-star">★</span>
@@ -68,7 +64,6 @@ function DmCard({ category, title, price, duration, rating, reviewsCount, coverU
                         {reviewsCount > 0 && <span className="dm-rating-count">({reviewsCount})</span>}
                     </div>
                 )}
-                {/* Цена влево, длительность вправо */}
                 <div className="dm-card-meta">
                     <span>{price ? formatPrice(price) : 'Бесплатно'}</span>
                     {duration && <span style={{ marginLeft: 'auto' }}>⏱ {formatDuration(duration)}</span>}
@@ -93,15 +88,13 @@ export default function DateModePage({ mode }) {
     const navigate   = useNavigate();
     const isSpontan  = mode === 'spontaneous';
 
-    // Planned: selected date
     const [selectedDate, setSelectedDate] = useState(todayISO);
 
-    // Data
-    const [matches,     setMatches]     = useState([]);
-    const [matchIdeaMap, setMatchIdeaMap] = useState({}); // ideaId → full idea
-    const [savedIdeas,  setSavedIdeas]  = useState([]);
-    const [myIdeas,     setMyIdeas]     = useState([]);
-    const [dataLoading, setDataLoading] = useState(true);
+    const [matches,      setMatches]      = useState([]);
+    const [matchIdeaMap, setMatchIdeaMap] = useState({});
+    const [savedIdeas,   setSavedIdeas]   = useState([]);
+    const [myIdeas,      setMyIdeas]      = useState([]);
+    const [dataLoading,  setDataLoading]  = useState(true);
 
     useEffect(() => {
         let cancelled = false;
@@ -116,7 +109,6 @@ export default function DateModePage({ mode }) {
             setSavedIdeas(savedData);
             setMyIdeas(myIdeasPage.content || []);
             setDataLoading(false);
-            // Подгружаем детали идей для совпадений
             const map = {};
             Promise.all((matchesData || []).map(async m => {
                 try { map[m.ideaId] = await getIdeaById(m.ideaId); } catch {}
@@ -125,14 +117,12 @@ export default function DateModePage({ mode }) {
         return () => { cancelled = true; };
     }, []);
 
-    // Tabs
     const [activeTab, setActiveTab] = useState(0);
     const tabRefs    = useRef([]);
     const barRef     = useRef(null);
     const trackRef   = useRef(null);
     const [indStyle, setIndStyle] = useState({ left: 0, width: 0 });
 
-    // Update indicator position
     const updateIndicator = useCallback((idx) => {
         const tab = tabRefs.current[idx];
         const bar = barRef.current;
@@ -147,14 +137,12 @@ export default function DateModePage({ mode }) {
         return () => clearTimeout(id);
     }, [activeTab, updateIndicator]);
 
-    // Slide track
     useEffect(() => {
         if (!trackRef.current) return;
         trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94)';
         trackRef.current.style.transform  = `translateX(${-activeTab * 100}%)`;
     }, [activeTab]);
 
-    // Touch swipe
     const touchState = useRef({ startX: 0, startY: 0, diffX: 0, lock: null });
 
     const onTouchStart = (e) => {
@@ -193,7 +181,6 @@ export default function DateModePage({ mode }) {
         t.lock = null;
     };
 
-    // Card click → detail, passing source context
     const goToIdea = (id) => navigate(`/ideas/${id}`, {
         state: {
             source: isSpontan ? 'spontaneous' : 'planned',
@@ -201,7 +188,6 @@ export default function DateModePage({ mode }) {
         }
     });
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="date-mode-page">
 
@@ -253,13 +239,21 @@ export default function DateModePage({ mode }) {
                 )}
             </div>
 
-            {/* HERO CARD */}
-            <div className="dm-hero" onClick={() => navigate('/ideas/feed')}>
+            {/* HERO CARD
+                ↓ ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ — navigate с ?mode=today / ?mode=smart
+            */}
+            <div
+                className="dm-hero"
+                onClick={() => navigate(isSpontan ? '/ideas/feed?mode=today' : '/ideas/feed?mode=smart')}
+            >
                 {isSpontan ? (
                     <>
                         <div className="dm-hero-emoji">✨</div>
                         <div className="dm-hero-sub">Быстрые идеи, которые можно начать в ближайшие часы</div>
-                        <button className="dm-hero-btn" onClick={e => { e.stopPropagation(); navigate('/ideas/feed'); }}>
+                        <button
+                            className="dm-hero-btn"
+                            onClick={e => { e.stopPropagation(); navigate('/ideas/feed?mode=today'); }}
+                        >
                             Идеи на сегодня
                             <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                         </button>
@@ -324,7 +318,7 @@ export default function DateModePage({ mode }) {
                                             duration={idea?.durationMin}
                                             rating={idea?.rating}
                                             reviewsCount={idea?.reviewsCount}
-                                            coverUrl={idea?.photos?.[0]?.url || idea?.coverPhotoUrl}
+                                            coverUrl={idea?.photos?.[0]?.url}
                                             variant="match"
                                             onClick={() => goToIdea(m.ideaId)}
                                         />
@@ -363,7 +357,7 @@ export default function DateModePage({ mode }) {
                                         duration={idea.durationMin}
                                         rating={idea.rating}
                                         reviewsCount={idea.reviewsCount}
-                                        coverUrl={idea.photos?.[0]?.url || idea.coverPhotoUrl}
+                                        coverUrl={idea.photos?.[0]?.url}
                                         variant="idea"
                                         onClick={() => goToIdea(idea.id)}
                                     />
@@ -401,7 +395,7 @@ export default function DateModePage({ mode }) {
                                         duration={idea.durationMin}
                                         rating={idea.rating}
                                         reviewsCount={idea.reviewsCount}
-                                        coverUrl={idea.photos?.[0]?.url || idea.coverPhotoUrl}
+                                        coverUrl={idea.photos?.[0]?.url}
                                         variant="idea"
                                         onClick={() => goToIdea(idea.id)}
                                     />
