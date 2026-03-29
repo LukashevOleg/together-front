@@ -36,14 +36,33 @@ export default function BottomNav() {
                 <div className="nav-label">Идеи</div>
             </div>
 
-            <div className="nav-center-btn" onClick={() => navigate('/swipe')}>
-                <svg viewBox="0 0 24 24">
-                    <rect x="4" y="3" width="9" height="12" rx="2" opacity=".45"/>
-                    <rect x="7" y="1" width="9" height="12" rx="2"/>
-                    <path d="M16 7l3 3-3 3" strokeWidth="2.2"/>
-                    <path d="M6 17l-3 3 3 3" strokeWidth="2.2" opacity=".5"/>
-                </svg>
-                <div className="nav-center-label">Свайпы</div>
+            <div className={`nav-item ${pathname.startsWith('/swipe') ? 'active' : ''}`} onClick={() => navigate('/swipe')}>
+                <div className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+                        {/* Задняя карточка — слегка наклонена */}
+                        <g transform="rotate(8 15 11)">
+                            <rect
+                                x="7"
+                                y="2"
+                                width="13"
+                                height="15"
+                                rx="2.5"
+                                fill="none"
+                            />
+                        </g>
+
+                        {/* Передняя карточка с белой заливкой */}
+                        <rect
+                            x="4"
+                            y="4"
+                            width="13"
+                            height="16"
+                            rx="2.5"
+                            fill="#FFFFFF"
+                        />
+                    </svg>
+                </div>
+                <div className="nav-label">Свайпы</div>
             </div>
 
             <div className={`nav-item ${isChats ? 'active' : ''}`} onClick={handleChats}>

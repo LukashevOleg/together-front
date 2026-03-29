@@ -5,6 +5,7 @@ import { getMatches }     from '../../api/swipesApi';
 import { getActiveChats, getDateHistory } from '../../api/datingApi';
 import BottomNav from '../../components/layout/BottomNav';
 import './LubimkaPage.css';
+import { TILES, makeHeroPath } from '../../utils/puzzleUtils';
 
 const INTEREST_META = {
     ROMANTIC:  { emoji: '🌹', label: 'Романтика' },
@@ -22,50 +23,31 @@ function daysSince(iso) {
     return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 }
 
-const TILES = [
-    {
-        key: 'lc0',
-        style: { left: 0,   top: 0,     width: 235, height: 142, zIndex: 6  },
-        clip: "path('M 0,0 L 89,0 C 89,4 85,5 85,10 C 85,20 129,20 129,10 C 129,5 125,4 125,0 L 215,0 L 215,63 C 219,63 220,55 225,55 C 235,55 235,87 225,87 C 220,87 219,79 215,79 L 215,142 L 125,142 C 125,138 129,137 129,132 C 129,122 85,122 85,132 C 85,137 89,138 89,142 L 0,142 Z')",
-        grad: 'radial-gradient(ellipse at 88% 12%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 2,  top: 23, width: 175, height: 94 },
-    },
-    {
-        key: 'rc0',
-        style: { left: 220, top: 0,     width: 155, height: 162, zIndex: 5  },
-        clip: "path('M 0,0 L 59,0 C 59,4 55,5 55,10 C 55,20 99,20 99,10 C 99,5 95,4 95,0 L 155,0 L 155,142 L 85,142 C 85,146 93,147 93,152 C 93,162 61,162 61,152 C 61,147 69,146 69,142 L 0,142 L 0,89 C 4,89 5,93 10,93 C 20,93 20,49 10,49 C 5,49 4,53 0,53 Z')",
-        grad: 'radial-gradient(ellipse at 15% 85%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 23, top: 23, width: 128, height: 114 },
-    },
-    {
-        key: 'lc1',
-        style: { left: 0,   top: 127,   width: 155, height: 218, zIndex: 11 },
-        clip: "path('M 0,20 L 99,20 C 99,16 91,15 91,10 C 91,0 123,0 123,10 C 123,15 115,16 115,20 L 155,20 L 155,91 C 151,91 150,87 145,87 C 135,87 135,131 145,131 C 150,127 151,127 155,127 L 155,198 L 85,198 C 85,202 93,203 93,208 C 93,218 61,218 61,208 C 61,203 69,202 69,198 L 0,198 Z')",
-        grad: 'radial-gradient(ellipse at 85% 80%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 2,  top: 23, width: 130, height: 150 },
-    },
-    {
-        key: 'rc1',
-        style: { left: 140, top: 147,   width: 255, height: 198, zIndex: 13 },
-        clip: "path('M 20,0 L 139,0 C 139,4 135,5 135,10 C 135,20 179,20 179,10 C 179,5 175,4 175,0 L 235,0 L 235,81 C 239,81 240,73 245,73 C 255,73 255,105 245,105 C 240,105 239,97 235,97 L 235,178 L 145,178 C 145,174 149,173 149,168 C 149,158 105,158 105,168 C 105,173 109,174 109,178 L 20,178 L 20,97 C 16,97 15,105 10,105 C 0,105 0,73 10,73 C 15,73 16,81 20,81 Z')",
-        grad: 'radial-gradient(ellipse at 12% 15%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 23, top: 8,  width: 208, height: 165 },
-    },
-    {
-        key: 'lc2',
-        style: { left: 0,   top: 330,   width: 235, height: 148, zIndex: 4  },
-        clip: "path('M 0,0 L 59,0 C 59,4 55,5 55,10 C 55,20 99,20 99,10 C 99,5 95,4 95,0 L 215,0 L 215,66 C 219,66 220,58 225,58 C 235,58 235,90 225,90 C 220,90 219,82 215,82 L 215,148 L 0,148 Z')",
-        grad: 'radial-gradient(ellipse at 50% 5%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 2,  top: 23, width: 211, height: 120 },
-    },
-    {
-        key: 'rc2',
-        style: { left: 220, top: 310,   width: 155, height: 168, zIndex: 5  },
-        clip: "path('M 0,20 L 39,20 C 39,16 31,15 31,10 C 31,0 63,0 63,10 C 63,15 55,16 55,20 L 155,20 L 155,168 L 0,168 L 0,112 C 4,112 5,116 10,116 C 20,116 20,72 10,72 C 5,72 4,76 0,76 Z')",
-        grad: 'radial-gradient(ellipse at 50% 95%,rgba(123,30,46,.85) 0%,transparent 60%)',
-        inner: { left: 2,  top: 23, width: 150, height: 120 },
-    },
-];
+
+function PrefsOverlay({ name, interests, onClose }) {
+    const liked = Object.keys(INTEREST_META).filter(k => interests.includes(k));
+    return (
+        <>
+            <div className="lb2-pref-bg" onClick={onClose} />
+            <div className="lb2-pref-overlay">
+                <div className="lb2-pref-grad" />
+                <div className="lb2-pref-chips">
+                    {liked.length > 0
+                        ? liked.map(key => {
+                            const meta = INTEREST_META[key];
+                            return (
+                                <span key={key} className="lb2-pref-chip">
+                                    {meta.emoji} {meta.label}
+                                </span>
+                            );
+                        })
+                        : <span style={{ fontSize: 13, color: 'rgba(255,255,255,.5)' }}>Предпочтения не заполнены</span>
+                    }
+                </div>
+            </div>
+        </>
+    );
+}
 
 function Tile({ tile, onClick, children }) {
     const { style, clip, grad, inner } = tile;
@@ -93,31 +75,6 @@ function Tile({ tile, onClick, children }) {
                 {children}
             </div>
         </div>
-    );
-}
-
-function PrefsOverlay({ name, interests, onClose }) {
-    const liked = Object.keys(INTEREST_META).filter(k => interests.includes(k));
-    return (
-        <>
-            <div className="lb2-pref-bg" onClick={onClose} />
-            <div className="lb2-pref-overlay">
-                <div className="lb2-pref-grad" />
-                <div className="lb2-pref-chips">
-                    {liked.length > 0
-                        ? liked.map(key => {
-                            const meta = INTEREST_META[key];
-                            return (
-                                <span key={key} className="lb2-pref-chip">
-                    {meta.emoji} {meta.label}
-                  </span>
-                            );
-                        })
-                        : <span style={{ fontSize: 13, color: '#888' }}>Предпочтения не заполнены</span>
-                    }
-                </div>
-            </div>
-        </>
     );
 }
 
@@ -217,13 +174,27 @@ export default function LubimkaPage() {
                     </div>
                 </div>
 
-                {/* HERO */}
                 <div className="lb2-hero">
                     {partner?.avatarUrl
-                        ? <img src={partner.avatarUrl} alt={partner.name} className="lb2-hero-img" />
-                        : <div className="lb2-hero-fallback"><span style={{ fontSize: 88 }}>🌸</span></div>
+                        ? <img
+                            src={partner.avatarUrl}
+                            alt={partner.name}
+                            className="lb2-hero-img"
+                            style={{ clipPath: makeHeroPath(375, 240) }}
+                        />
+                        : <div
+                            className="lb2-hero-fallback"
+                            style={{ clipPath: makeHeroPath(375, 240) }}
+                        >
+                            <span style={{ fontSize: 88 }}>🌸</span>
+                        </div>
                     }
-                    <div className="lb2-hero-overlay" />
+
+                    <div
+                        className="lb2-hero-overlay"
+                        style={{ clipPath: makeHeroPath(375, 240) }}
+                    />
+
                     <div className="lb2-hero-name">{partner?.name || 'Партнёр'}</div>
                 </div>
 
@@ -260,24 +231,22 @@ export default function LubimkaPage() {
                         <div className="lb2-tile-label">Календарь</div>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="90" height="90" viewBox="0 0 24 24" fill="none"
-                                 stroke="rgba(0,0,0,.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                 stroke="rgba(255,255,255,.65)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                                 <line x1="16" y1="2" x2="16" y2="6"/>
                                 <line x1="8"  y1="2" x2="8"  y2="6"/>
                                 <line x1="3"  y1="10" x2="21" y2="10"/>
-                                <rect x="7"  y="14" width="3" height="3" rx=".5" fill="rgba(0,0,0,.75)" stroke="none"/>
-                                <rect x="11" y="14" width="3" height="3" rx=".5" fill="rgba(0,0,0,.75)" stroke="none"/>
-                                <rect x="15" y="14" width="3" height="3" rx=".5" fill="rgba(0,0,0,.75)" stroke="none"/>
+                                <rect x="7"  y="14" width="3" height="3" rx=".5" fill="rgba(255,255,255,.65)" stroke="none"/>
+                                <rect x="11" y="14" width="3" height="3" rx=".5" fill="rgba(255,255,255,.65)" stroke="none"/>
+                                <rect x="15" y="14" width="3" height="3" rx=".5" fill="rgba(255,255,255,.65)" stroke="none"/>
                             </svg>
                         </div>
                     </Tile>
 
                     {/* rc1 — Интересы → popup */}
                     <Tile tile={TILES[3]} onClick={() => setPrefsOpen(true)}>
-                        <div>
-                            <div className="lb2-tile-label">Что нравится</div>
-                            <div className="lb2-tile-name">{partner?.name || 'партнёру'}</div>
-                        </div>
+                        <div className="lb2-tile-label">Что нравится</div>
+                        <div className="lb2-tile-name">{partner?.name || 'партнёру'}</div>
                         <div className="lb2-chips">
                             {interests.length > 0
                                 ? interests.slice(0, 5).map(k => {
@@ -293,10 +262,10 @@ export default function LubimkaPage() {
                     <Tile tile={TILES[4]} onClick={() => navigate('/stats')}>
                         <div className="lb2-tile-label">Статистика пары</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
-                            <div style={{ fontFamily: 'Cormorant, serif', fontSize: 56, fontWeight: 600, lineHeight: 1, color: '#111' }}>
+                            <div style={{ fontFamily: 'Cormorant, serif', fontSize: 56, fontWeight: 600, lineHeight: 1, color: '#fff' }}>
                                 {loading ? '…' : datesCount}
                             </div>
-                            <div style={{ fontFamily: 'Cormorant, serif', fontSize: 22, fontWeight: 600, color: '#111' }}>
+                            <div style={{ fontFamily: 'Cormorant, serif', fontSize: 22, fontWeight: 600, color: '#fff' }}>
                                 {datesCount === 1 ? 'свидание' : 'свиданий'}
                             </div>
                         </div>
@@ -307,7 +276,7 @@ export default function LubimkaPage() {
                         <div className="lb2-tile-label" style={{ whiteSpace: 'nowrap' }}>История свиданий</div>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="90" height="90" viewBox="0 0 24 24" fill="none"
-                                 stroke="rgba(0,0,0,.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                 stroke="rgba(255,255,255,.65)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/>
                                 <polyline points="3 3 3 8 8 8"/>
                                 <polyline points="12 7 12 12 15 15"/>

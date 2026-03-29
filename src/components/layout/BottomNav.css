@@ -1,6 +1,6 @@
 .bottom-nav {
-    background: #fff;
-    border-top: 1px solid #E5E3E0;
+    background: #ffffff;
+    border-top: 1px solid #ffffff;
     padding: 10px 12px 28px;
     display: flex;
     justify-content: space-around;
@@ -43,37 +43,4 @@
     font-size: 10px;
     color: #888;
     font-weight: 400;
-}
-
-/* Центральная кнопка свайпов — прямоугольная с радиусом */
-.nav-center-btn {
-    flex: 0 0 52px;
-    width: 52px;
-    height: 52px;
-    background: #7B1E2E;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    margin-top: -18px;
-    box-shadow: 0 4px 16px rgba(123,30,46,0.45);
-    cursor: pointer;
-}
-
-.nav-center-btn svg {
-    width: 19px;
-    height: 19px;
-    stroke: #fff;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.nav-center-label {
-    font-size: 9px;
-    color: rgba(255,255,255,0.85);
-    font-weight: 500;
 }

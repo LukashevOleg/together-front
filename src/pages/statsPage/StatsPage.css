@@ -57,28 +57,34 @@
     padding: 18px 16px;
 }
 .stat-tile.dark {
-    background: #111;
-    border-color: #111;
+    background: #441b1b;
     position: relative;
     overflow: hidden;
 }
 .stat-tile.dark::after {
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 80% 20%, rgba(123,30,46,.4) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 40% 70%, rgb(96, 42, 42) 0%, transparent 90%);
     pointer-events: none;
 }
+.st-em,
+.st-num,
+.st-lbl {
+    position: relative;
+    z-index: 1;
+}
+
 .st-em { font-size: 24px; margin-bottom: 8px; }
 .st-num {
     font-family: 'Cormorant', serif;
     font-size: 36px; font-weight: 600; line-height: 1;
     color: #fff;
 }
-.st-lbl { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; }
+.st-lbl { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; z-index: 99;}
 
 /* ── Streak ──────────────────────────────────────────────────────────── */
 .stats-streak {
-    background: #111;
+    background: #441b1b;
     border-radius: 20px;
     padding: 20px;
     margin-bottom: 10px;
@@ -91,7 +97,7 @@
 .stats-streak::after {
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 70%, rgba(123,30,46,.35) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 80% 20%, rgb(96, 42, 42) 0%, transparent 40%);
     pointer-events: none;
 }
 .stats-streak-z { position: relative; z-index: 1; }
