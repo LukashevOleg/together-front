@@ -15,11 +15,11 @@ const EMOJIS = {
 
 const LABELS = {
     ROMANTIC: 'Романтика', OUTDOOR: 'Природа', FOOD: 'Гастро',
-    ACTIVE: 'Актив', CREATIVE: 'Творчество', INDOOR: 'Дома'
-    , WELLNESS: 'Релакс',
+    ACTIVE: 'Актив', CREATIVE: 'Творчество', INDOOR: 'Дома',
+    WELLNESS: 'Релакс',
 };
 
-export default function IdeaSmallCard({ idea, onClick }) {
+export default function IdeaSmallCard({ idea, onClick, saved = false, onSave }) {
     const bg    = GRADIENTS[idea.category] || GRADIENTS.OUTDOOR;
     const emoji = EMOJIS[idea.category]   || '✨';
     const label = LABELS[idea.category]   || idea.category;
@@ -45,7 +45,15 @@ export default function IdeaSmallCard({ idea, onClick }) {
                     : <span>{emoji}</span>
                 }
                 <div className="small-card-badge">{label}</div>
-                <div className="small-card-save">🤍</div>
+                <button
+                    className={`small-card-save ${saved ? 'saved' : ''}`}
+                    onClick={onSave}
+                    aria-label={saved ? 'Убрать из сохранённых' : 'Сохранить'}
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
             </div>
             <div className="small-card-body">
                 <div className="small-card-title">{idea.title}</div>

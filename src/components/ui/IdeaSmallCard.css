@@ -43,8 +43,44 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    font-size: 18px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.small-card-save:active {
+    transform: scale(0.88);
+}
+
+.small-card-save svg {
+    width: 16px;
+    height: 16px;
+    transition: fill 0.2s, stroke 0.2s;
+}
+
+.small-card-save:not(.saved) svg {
+    fill: none;
+    stroke: #111;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.small-card-save.saved svg {
+    fill: #7B1E2E;
+    stroke: #7B1E2E;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .small-card-body {

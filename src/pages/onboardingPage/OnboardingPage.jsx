@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveOnboardingStep, createInvite } from '../../api/profilerApi';
+import { useCitySearch } from '../../hooks/useCitySearch';
 import './OnboardingPage.css';
 
 const TOTAL_STEPS = 5;
@@ -14,11 +15,6 @@ const INTERESTS = [
     { key: 'RELAX',     emoji: '🧖', label: 'Релакс' },
     { key: 'ACTIVE',    emoji: '🏃', label: 'Активное' },
     { key: 'NIGHTLIFE', emoji: '🌙', label: 'Ночные' },
-];
-
-const CITIES = [
-    'Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург',
-    'Новосибирск', 'Сочи', 'Нижний Новгород', 'Краснодар',
 ];
 
 const QR_PATTERN = [
@@ -41,24 +37,32 @@ function ageLabel(n) {
 export default function OnboardingPage() {
     const navigate = useNavigate();
 
-    const [step,      setStep]      = useState(0);
-    const [done,      setDone]      = useState(false);
-    const [saving,    setSaving]    = useState(false);
+    const [step,   setStep]   = useState(0);
+    const [done,   setDone]   = useState(false);
+    const [saving, setSaving] = useState(false);
 
-    // Form state per step
+    // Form state
     const [name,      setName]      = useState('');
     const [age,       setAge]       = useState(25);
     const [interests, setInterests] = useState(new Set());
-    const [city,      setCity]      = useState('');
-    const [citySugs,  setCitySugs]  = useState([]);
+
+    // City — через хук Nominatim
+    const {
+        query:       cityQuery,
+        suggestions: citySugs,
+        selected:    citySelected,
+        loading:     cityLoading,
+        search:      citySearch,
+        pick:        cityPick,
+    } = useCitySearch();
 
     // Partner step
-    const [partnerOpt, setPartnerOpt] = useState(null); // 'link' | 'qr'
-    const [invite,     setInvite]     = useState(null);  // InviteResponse from API
-    const [copied,     setCopied]     = useState(false);
+    const [partnerOpt,    setPartnerOpt]    = useState(null); // 'link' | 'qr'
+    const [invite,        setInvite]        = useState(null);
+    const [copied,        setCopied]        = useState(false);
     const [inviteLoading, setInviteLoading] = useState(false);
 
-    // Load invite when user picks an option on step 4
+    // Загружаем инвайт, когда пользователь выбрал способ на шаге 4
     useEffect(() => {
         if (step !== 4 || !partnerOpt || invite) return;
         setInviteLoading(true);
@@ -68,14 +72,16 @@ export default function OnboardingPage() {
             .finally(() => setInviteLoading(false));
     }, [step, partnerOpt]);
 
-    // ── Navigation ───────────────────────────────────────────────────────────
+    // ── Валидация ────────────────────────────────────────────────────────────
     const canProceed = () => {
         if (step === 0) return name.trim().length >= 2;
         if (step === 2) return interests.size >= 2;
-        if (step === 3) return city.trim().length >= 2;
+        // Шаг 3: принимаем только город, выбранный из подсказок
+        if (step === 3) return !!citySelected;
         return true;
     };
 
+    // ── Сохранение шага ──────────────────────────────────────────────────────
     const saveStep = async (stepNum, fields) => {
         try {
             setSaving(true);
@@ -87,16 +93,17 @@ export default function OnboardingPage() {
         }
     };
 
+    // ── Навигация ────────────────────────────────────────────────────────────
     const handleNext = async () => {
         if (!canProceed()) return;
 
-        // Save current step data to backend
         if (step === 0) await saveStep(0, { name: name.trim() });
         if (step === 1) await saveStep(1, { age });
         if (step === 2) await saveStep(2, { interests: [...interests] });
-        if (step === 3) await saveStep(3, { city: city.trim() });
+        // Сохраняем name города из выбранного объекта
+        if (step === 3) await saveStep(3, { city: citySelected.name });
         if (step === 4) {
-            await saveStep(4, {});  // step=4 → onboardingCompleted=true
+            await saveStep(4, {});
             setDone(true);
             return;
         }
@@ -112,7 +119,7 @@ export default function OnboardingPage() {
         setStep(s => s + 1);
     };
 
-    // ── Interests ────────────────────────────────────────────────────────────
+    // ── Интересы ─────────────────────────────────────────────────────────────
     const toggleInterest = (key) => {
         setInterests(prev => {
             const next = new Set(prev);
@@ -121,20 +128,7 @@ export default function OnboardingPage() {
         });
     };
 
-    // ── City suggestions ──────────────────────────────────────────────────────
-    const onCityInput = (val) => {
-        setCity(val);
-        if (val.trim().length < 1) { setCitySugs([]); return; }
-        const matches = CITIES.filter(c => c.toLowerCase().startsWith(val.toLowerCase()));
-        setCitySugs(matches);
-    };
-
-    const selectCity = (c) => {
-        setCity(c);
-        setCitySugs([]);
-    };
-
-    // ── Copy invite link ──────────────────────────────────────────────────────
+    // ── Копирование ссылки ────────────────────────────────────────────────────
     const copyLink = () => {
         if (!invite) return;
         navigator.clipboard.writeText(invite.inviteUrl).catch(() => {});
@@ -142,7 +136,7 @@ export default function OnboardingPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // ── Done screen ───────────────────────────────────────────────────────────
+    // ── Done-экран ────────────────────────────────────────────────────────────
     if (done) {
         return (
             <div className="onboarding-page">
@@ -294,35 +288,101 @@ export default function OnboardingPage() {
                     <div className="ob-emoji">🏙</div>
                     <div className="ob-title">Ваш<br/><span>город?</span></div>
                     <div className="ob-sub">Покажем идеи и места рядом с вами</div>
+
                     <div className="ob-city-wrap">
+                        {/* Иконка-пин */}
                         <div className="ob-city-icon">
                             <svg viewBox="0 0 24 24">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
                         </div>
+
+                        {/* Спиннер загрузки */}
+                        {cityLoading && (
+                            <div style={{
+                                position: 'absolute',
+                                right: 16,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                fontSize: 18,
+                                lineHeight: 1,
+                                animation: 'obBounce 0.4s ease infinite alternate',
+                                pointerEvents: 'none',
+                            }}>
+                                •••
+                            </div>
+                        )}
+
+                        {/* Галочка — город выбран */}
+                        {citySelected && !cityLoading && (
+                            <div style={{
+                                position: 'absolute',
+                                right: 16,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                pointerEvents: 'none',
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24"
+                                     fill="none" stroke="#2D8C4E" strokeWidth="2.5" strokeLinecap="round">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                        )}
+
                         <input
                             className="ob-city-input"
                             type="text"
                             placeholder="Начните вводить город..."
-                            value={city}
-                            onChange={e => onCityInput(e.target.value)}
+                            value={cityQuery}
+                            onChange={e => citySearch(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && canProceed() && handleNext()}
+                            autoComplete="off"
+                            // Лёгкая визуальная подсказка: красная рамка если набрали, но не выбрали
+                            style={
+                                cityQuery.length >= 2 && !citySelected && !cityLoading
+                                    ? { borderColor: '#D9534F' }
+                                    : citySelected
+                                        ? { borderColor: '#2D8C4E' }
+                                        : undefined
+                            }
                         />
                     </div>
+
+                    {/* Список подсказок */}
                     {citySugs.length > 0 && (
                         <div className="ob-city-suggestions">
-                            {citySugs.map(c => (
-                                <div key={c} className="ob-city-sug-item" onClick={() => selectCity(c)}>
+                            {citySugs.map((c, i) => (
+                                <div key={i} className="ob-city-sug-item" onClick={() => cityPick(c)}>
                                     <svg viewBox="0 0 24 24">
                                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                         <circle cx="12" cy="10" r="3"/>
                                     </svg>
-                                    {c}
+                                    <span>{c.name}</span>
+                                    {c.country && (
+                                        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#aaa', flexShrink: 0 }}>
+                                            {c.country}
+                                        </span>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     )}
+
+                    {/* Город не найден */}
+                    {cityQuery.length >= 2 && !citySelected && !cityLoading && citySugs.length === 0 && (
+                        <div style={{ fontSize: 12, color: '#888', marginTop: 8, paddingLeft: 4 }}>
+                            Город не найден — попробуйте другое написание
+                        </div>
+                    )}
+
+                    {/* Подсказка «выберите из списка» если набирают но ещё не выбрали */}
+                    {cityQuery.length >= 2 && !citySelected && citySugs.length > 0 && (
+                        <div style={{ fontSize: 12, color: '#888', marginTop: 8, paddingLeft: 4 }}>
+                            Выберите город из списка
+                        </div>
+                    )}
+
                     <button
                         className={`ob-btn-next ${canProceed() ? 'ready' : ''}`}
                         disabled={!canProceed() || saving}
@@ -361,7 +421,6 @@ export default function OnboardingPage() {
                         ))}
                     </div>
 
-                    {/* Panel — ссылка или QR: показывается сразу после выбора опции */}
                     {partnerOpt && (
                         <div className="ob-partner-panel">
 

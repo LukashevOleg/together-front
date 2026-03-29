@@ -5,6 +5,7 @@ import BottomNav from '../../components/layout/BottomNav';
 import IdeaSmallCard from '../../components/ui/IdeaSmallCard';
 import api from '../../api/authApi';
 import { getMyProfile } from '../../api/profilerApi';
+import { saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
 import './HomePage.css';
 
 const FILTER_CHIPS = [
@@ -26,9 +27,11 @@ export default function HomePage() {
             .then(p => setAvatarUrl(p.avatarUrl))
             .catch(() => {});
     }, []);
+
     const [activeFilter, setActiveFilter] = useState(null);
-    const [ideas, setIdeas] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ideas,        setIdeas]        = useState([]);
+    const [loading,      setLoading]      = useState(true);
+    const [savedMap,     setSavedMap]     = useState({});
 
     useEffect(() => {
         fetchIdeas();
@@ -38,14 +41,40 @@ export default function HomePage() {
         setLoading(true);
         try {
             const params = new URLSearchParams({ size: 10, sortBy: 'rating' });
-            if (activeFilter === 'free')    params.set('priceTo', '0');
-            else if (activeFilter)          params.set('category', activeFilter);
+            if (activeFilter === 'free') params.set('priceTo', '0');
+            else if (activeFilter)       params.set('category', activeFilter);
+
             const { data } = await api.get(`/api/ideas?${params}`);
-            setIdeas(data.content || []);
+            const list = data.content || [];
+            setIdeas(list);
+
+            // Подгружаем статусы лайков параллельно
+            const statuses = await Promise.all(
+                list.map(idea =>
+                    getSaveStatus(idea.id)
+                        .then(s => [idea.id, s.saved])
+                        .catch(() => [idea.id, false])
+                )
+            );
+            setSavedMap(Object.fromEntries(statuses));
         } catch {
             setIdeas([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleToggleSave = async (idea) => {
+        const newSaved = !savedMap[idea.id];
+        // Optimistic update
+        setSavedMap(prev => ({ ...prev, [idea.id]: newSaved }));
+        try {
+            newSaved
+                ? await saveIdea(Number(idea.id), idea.title, idea.category)
+                : await unsaveIdea(Number(idea.id));
+        } catch {
+            // Откат при ошибке
+            setSavedMap(prev => ({ ...prev, [idea.id]: !newSaved }));
         }
     };
 
@@ -134,6 +163,8 @@ export default function HomePage() {
                                     key={idea.id}
                                     idea={idea}
                                     style={{ animationDelay: `${i * 0.1}s` }}
+                                    saved={savedMap[idea.id] || false}
+                                    onSave={(e) => { e.stopPropagation(); handleToggleSave(idea); }}
                                     onClick={() => navigate(`/ideas/${idea.id}`)}
                                 />
                             ))
