@@ -22,7 +22,7 @@
 .step-heading span { color: var(--burgundy); }
 .step-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.4; }
 
-/* PHOTO */
+/* ── PHOTO UPLOAD (пустое состояние) ─────────────────────────────────── */
 .photo-upload-main {
     width: 100%; height: 180px;
     background: var(--white); border: 2px dashed var(--border);
@@ -32,19 +32,119 @@
     overflow: hidden;
 }
 .photo-upload-main:hover { border-color: var(--burgundy); }
-.photo-upload-main.has-photo { border-style: solid; border-color: transparent; }
 .upload-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; }
-.upload-icon svg { width: 20px; height: 20px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+.upload-icon svg { width: 20px; height: 20px; stroke: var(--text-muted); }
 .upload-label { font-size: 14px; font-weight: 500; color: var(--black); }
 .upload-sub   { font-size: 11px; color: var(--text-muted); }
 
-/* FIELDS */
+/* ── PHOTO GRID ──────────────────────────────────────────────────────── */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+/* первый элемент занимает всю ширину */
+.photo-grid .photo-thumb:first-child {
+    grid-column: 1 / -1;
+    aspect-ratio: 16 / 9;
+}
+
+.photo-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: grab;
+    background: var(--border);
+    user-select: none;
+    -webkit-user-select: none;
+}
+.photo-thumb:active { cursor: grabbing; }
+.photo-thumb.cover  { border: 2px solid var(--burgundy); }
+
+.photo-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+/* Обложка-бейдж */
+.cover-badge {
+    position: absolute;
+    bottom: 8px; left: 8px;
+    background: var(--burgundy);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+/* Кнопка удалить */
+.photo-remove {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.photo-remove:hover { background: rgba(0,0,0,0.8); }
+.photo-remove svg { width: 12px; height: 12px; stroke: #fff; }
+
+/* Drag handle */
+.drag-handle {
+    position: absolute;
+    bottom: 6px; right: 6px;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    pointer-events: none;
+}
+.drag-handle svg { width: 13px; height: 13px; stroke: rgba(255,255,255,0.85); }
+
+/* Кнопка "добавить ещё" */
+.photo-add-more {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    border: 2px dashed var(--border);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.photo-add-more:hover { border-color: var(--burgundy); }
+.photo-add-more svg { width: 20px; height: 20px; stroke: var(--text-muted); }
+
+/* Подсказка под сеткой */
+.photo-count-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+/* ── FIELDS ──────────────────────────────────────────────────────────── */
 .field-group  { margin-bottom: 18px; }
 .fields-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field-label  { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 8px; }
-.field-input  { width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--black); outline: none; transition: border-color 0.2s; }
+.field-input  { width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--black); outline: none; transition: border-color 0.2s; box-sizing: border-box; }
 .field-input:focus  { border-color: var(--burgundy); }
-.field-textarea { width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--black); outline: none; transition: border-color 0.2s; resize: none; }
+.field-textarea { width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--black); outline: none; transition: border-color 0.2s; resize: none; box-sizing: border-box; }
 .field-textarea:focus { border-color: var(--burgundy); }
 .field-counter { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 4px; }
 
@@ -52,8 +152,10 @@
 .f-chip { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--black); transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
 .f-chip.on { background: var(--black); border-color: var(--black); color: #fff; }
 
-/* FOOTER */
+/* ── FOOTER ──────────────────────────────────────────────────────────── */
 .create-footer { padding: 12px 20px 28px; background: var(--bg); flex-shrink: 0; }
+.create-error  { margin: 0 20px 8px; padding: 10px 14px; background: #fff0f0; border-radius: var(--radius-sm); font-size: 13px; color: #c0392b; }
+
 .btn-next {
     width: 100%; background: var(--black); color: #fff;
     border: none; border-radius: 18px; padding: 17px 20px;
@@ -64,3 +166,8 @@
 .btn-next:disabled { opacity: 0.4; cursor: default; }
 .btn-next.ready    { background: var(--burgundy); }
 .btn-next svg { width: 16px; height: 16px; }
+
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

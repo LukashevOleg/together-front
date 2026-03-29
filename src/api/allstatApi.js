@@ -9,6 +9,11 @@ export async function submitReview(data) {
     return res.data;
 }
 
+export async function getIdeaStats(ideaId) {
+    const { data } = await api.get(`/api/stats/ideas/${ideaId}`);
+    return data; // { savesCount, satisfiedPercent }
+}
+
 /**
  * Получить отзывы для идеи (постранично).
  * @param {number} ideaId

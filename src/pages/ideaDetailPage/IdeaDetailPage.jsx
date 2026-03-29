@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getIdeaById, saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
 import { createDateEvent, acceptDateEvent, declineDateEvent, cancelDateEvent } from '../../api/datingApi';
 import { getPartner } from '../../api/profilerApi';
-import { getReviews } from '../../api/allstatApi';
+import { getReviews, getIdeaStats } from '../../api/allstatApi';
 import { SURPRISE_IMAGE, SURPRISE_TITLE } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
 import './IdeaDetailPage.css';
@@ -34,7 +34,7 @@ function formatDuration(min) {
     return m ? `${h} ч ${m} мин` : `${h} ч`;
 }
 function formatPrice(p) { return p ? `от ${Number(p).toLocaleString('ru-RU')} ₽` : null; }
-function formatSaves(n) { if (!n) return '—'; return n >= 1000 ? `${(n/1000).toFixed(1)}k` : String(n); }
+function formatSaves(n) { if (!n) return '0'; return n >= 1000 ? `${(n/1000).toFixed(1)}k` : String(n); }
 function todayISO() { return new Date().toISOString().split('T')[0]; }
 function nextDays(from, count) {
     return Array.from({ length: count }, (_, i) => {
@@ -53,7 +53,171 @@ function fmtWeekday(iso) {
 
 const TIME_SLOTS = ['17:00', '19:00', '21:00'];
 
-// ── Invite Modal ────────────────────────────────────────────────────────────
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+function Lightbox({ photos, startIndex, onClose }) {
+    const [index, setIndex] = useState(startIndex);
+    const touchStartX = useRef(null);
+
+    // закрыть по Escape
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    // блокируем скролл страницы под лайтбоксом
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
+    const prev = () => setIndex(i => (i - 1 + photos.length) % photos.length);
+    const next = () => setIndex(i => (i + 1) % photos.length);
+
+    const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+    const onTouchEnd   = (e) => {
+        if (touchStartX.current === null) return;
+        const delta = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(delta) > 40) { delta < 0 ? next() : prev(); }
+        touchStartX.current = null;
+    };
+
+    return (
+        <div className="lb-overlay"
+             onTouchStart={onTouchStart}
+             onTouchEnd={onTouchEnd}>
+
+            {/* Крестик */}
+            <button className="lb-close" onClick={onClose} aria-label="Закрыть">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6"  y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+
+            {/* Счётчик */}
+            {photos.length > 1 && (
+                <div className="lb-counter">{index + 1} / {photos.length}</div>
+            )}
+
+            {/* Фото */}
+            <div className="lb-img-wrap">
+                <img
+                    key={index}
+                    className="lb-img"
+                    src={photos[index].url}
+                    alt={`Фото ${index + 1}`}
+                    draggable={false}
+                />
+            </div>
+
+            {/* Стрелки — только если фото > 1 */}
+            {photos.length > 1 && (
+                <>
+                    <button className="lb-arrow lb-arrow-prev" onClick={prev} aria-label="Предыдущее">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </button>
+                    <button className="lb-arrow lb-arrow-next" onClick={next} aria-label="Следующее">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
+                </>
+            )}
+
+            {/* Точки */}
+            {photos.length > 1 && (
+                <div className="lb-dots">
+                    {photos.map((_, i) => (
+                        <button key={i} className={`lb-dot ${i === index ? 'active' : ''}`}
+                                onClick={() => setIndex(i)} aria-label={`Фото ${i + 1}`}/>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Photo Hero Carousel ───────────────────────────────────────────────────────
+function PhotoHero({ photos, bgGrad, catEmoji, title, onBack, onSave, saved, onPhotoClick }) {
+    const [activeIdx, setActiveIdx] = useState(0);
+    const stripRef   = useRef(null);
+    const touchStart = useRef(null);
+
+    const scrollToIndex = useCallback((i) => {
+        const strip = stripRef.current;
+        if (!strip) return;
+        const w = strip.clientWidth;
+        strip.scrollTo({ left: i * w, behavior: 'smooth' });
+    }, []);
+
+    // Синхронизируем точки при ручном скролле (snap)
+    const onScroll = () => {
+        const strip = stripRef.current;
+        if (!strip) return;
+        const i = Math.round(strip.scrollLeft / strip.clientWidth);
+        setActiveIdx(i);
+    };
+
+    const hasSingle = !photos || photos.length === 0;
+    const list      = hasSingle ? [] : [...photos].sort((a, b) => a.sortOrder - b.sortOrder);
+
+    return (
+        <div className="id-hero-wrap">
+            {hasSingle ? (
+                /* Нет фото → градиент + эмодзи */
+                <div className="id-hero" style={{ background: bgGrad }}>
+                    <div className="id-hero-emoji">{catEmoji || '💡'}</div>
+                    <div className="id-hero-gradient"/>
+                    <div className="id-hero-title">{title}</div>
+                </div>
+            ) : (
+                /* Карусель */
+                <div className="id-hero id-hero--carousel">
+                    <div className="id-carousel-strip"
+                         ref={stripRef}
+                         onScroll={onScroll}>
+                        {list.map((p, i) => (
+                            <div key={p.id} className="id-carousel-slide"
+                                 onClick={() => onPhotoClick(i)}>
+                                <img src={p.url} alt={`Фото ${i + 1}`} className="id-carousel-img"/>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Dot-индикаторы — вверху */}
+                    {list.length > 1 && (
+                        <div className="id-carousel-dots">
+                            {list.map((_, i) => (
+                                <button key={i}
+                                        className={`id-carousel-dot ${i === activeIdx ? 'active' : ''}`}
+                                        onClick={() => { setActiveIdx(i); scrollToIndex(i); }}
+                                        aria-label={`Фото ${i + 1}`}/>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="id-hero-gradient"/>
+                    <div className="id-hero-title">{title}</div>
+                </div>
+            )}
+
+            {/* Общие оверлей-кнопки */}
+            <button className="id-btn-back" onClick={onBack}>
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button className={`id-btn-save ${saved ? 'saved' : ''}`} onClick={onSave}>
+                <svg viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            </button>
+        </div>
+    );
+}
+
+// ── Invite Modal ──────────────────────────────────────────────────────────────
 function InviteModal({ open, onClose, onSend, initialDate }) {
     const base = initialDate || todayISO();
     const days = nextDays(base, 3);
@@ -92,7 +256,6 @@ function InviteModal({ open, onClose, onSend, initialDate }) {
                     Партнёр получит уведомление и сможет принять или предложить другое время
                 </div>
 
-                {/* DATE BUTTONS */}
                 <div className="id-date-row">
                     {nextDays(base, 3).map(d => (
                         <button key={d} className={`id-date-btn ${selDate === d ? 'active' : ''}`}
@@ -104,7 +267,6 @@ function InviteModal({ open, onClose, onSend, initialDate }) {
                     ))}
                 </div>
 
-                {/* TIME SLOTS */}
                 <div className="id-time-label">Время</div>
                 <div className="id-time-slots">
                     {TIME_SLOTS.map(t => (
@@ -122,7 +284,6 @@ function InviteModal({ open, onClose, onSend, initialDate }) {
 
                 <div className="id-modal-divider" />
 
-                {/* SURPRISE TOGGLE */}
                 <div className="id-toggle-row">
                     <div>
                         <div className="id-toggle-label">🎁 Свидание-сюрприз</div>
@@ -136,8 +297,8 @@ function InviteModal({ open, onClose, onSend, initialDate }) {
                 </div>
 
                 <div className={`id-hint-wrap ${isSurprise ? 'visible' : ''}`}>
-          <textarea className="id-hint-field" value={hint} onChange={e => setHint(e.target.value)}
-                    placeholder="Подскажите что взять с собой или как одеться" />
+                    <textarea className="id-hint-field" value={hint} onChange={e => setHint(e.target.value)}
+                              placeholder="Подскажите что взять с собой или как одеться" />
                 </div>
 
                 <button className="id-modal-send" onClick={handleSend}>
@@ -152,44 +313,48 @@ function InviteModal({ open, onClose, onSend, initialDate }) {
     );
 }
 
-// ── Page ────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function IdeaDetailPage() {
     const { id }    = useParams();
     const navigate  = useNavigate();
     const { state } = useLocation();
 
-    // state передаётся из DateModePage: { source: 'spontaneous'|'planned', date: 'YYYY-MM-DD' }
-    // или из InvitationsPage: { mode: 'incoming'|'outgoing', eventId, event }
     const source      = state?.source;
     const plannedDate = state?.date;
-    const invMode     = state?.mode;     // 'incoming' | 'outgoing' | undefined
+    const invMode     = state?.mode;
     const invEventId  = state?.eventId;
 
-    const [idea,      setIdea]      = useState(null);
-    const [loading,   setLoading]   = useState(true);
-    const [partnerId, setPartnerId] = useState(null);
-    const [saved,     setSaved]     = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [sending,   setSending]   = useState(false);
-    const [toast,     setToast]     = useState('');
-    const [reviews,   setReviews]   = useState(null); // { reviews, totalElements, averageRating, reviewCount }
+    const [idea,        setIdea]        = useState(null);
+    const [loading,     setLoading]     = useState(true);
+    const [partnerId,   setPartnerId]   = useState(null);
+    const [saved,       setSaved]       = useState(false);
+    const [totalDates,  setTotalDates]  = useState(0);
+    const [modalOpen,   setModalOpen]   = useState(false);
+    const [sending,     setSending]     = useState(false);
+    const [toast,       setToast]       = useState('');
+    const [reviews,     setReviews]     = useState(null);
+    const [ideaStats,   setIdeaStats]   = useState(null);
+    const [lbIndex,     setLbIndex]     = useState(null);
 
-    // Загружаем идею, партнёра и отзывы параллельно
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
         Promise.all([
             getIdeaById(id),
             getPartner().catch(() => null),
-            getSaveStatus(id).catch(() => ({ saved: false })),
+            getSaveStatus(id).catch(() => ({ saved: false, totalDates: 0 })),
             getReviews(id, 0, 5).catch(() => null),
-        ]).then(([ideaData, partner, savedStatus, reviewData]) => {
+            getIdeaStats(id).catch(() => null),
+        ]).then(([ideaData, partner, savedStatus, reviewData, statsData]) => {
             if (cancelled) return;
             setIdea(ideaData);
             setPartnerId(partner?.id ?? null);
             setSaved(savedStatus.saved);
             setReviews(reviewData);
+            setIdeaStats(statsData);
             setLoading(false);
+            // savesCount берём из getSaveStatus (самый свежий), с фолбэком на allstat и idea
+            setTotalDates(statsData?.totalDates ?? 0)
         }).catch(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
     }, [id]);
@@ -201,20 +366,16 @@ export default function IdeaDetailPage() {
         const newSaved = !saved;
         setSaved(newSaved);
         try {
-            if (newSaved) {
-                await saveIdea(Number(id), idea.title, idea.category);
-                showToast('Сохранено ❤️');
-            } else {
-                await unsaveIdea(Number(id));
-                showToast('Убрано из сохранённых');
-            }
+            newSaved
+                ? await saveIdea(Number(id), idea.title, idea.category)
+                : await unsaveIdea(Number(id));
+            showToast(newSaved ? 'Сохранено ❤️' : 'Убрано из сохранённых');
         } catch {
             setSaved(!newSaved);
             showToast('Ошибка, попробуйте ещё раз');
         }
     };
 
-    // Обработчики для режима приглашения (incoming/outgoing)
     const handleAcceptInvite = async () => {
         setSending(true);
         try {
@@ -245,12 +406,7 @@ export default function IdeaDetailPage() {
 
     const handleInviteClick = () => {
         if (source === 'spontaneous') {
-            handleSend({
-                date:       todayISO(),
-                time:       null,
-                isSurprise: false,
-                hint:       '',
-            });
+            handleSend({ date: todayISO(), time: null, isSurprise: false, hint: '' });
         } else {
             setModalOpen(true);
         }
@@ -297,39 +453,35 @@ export default function IdeaDetailPage() {
     const cat    = CATEGORY_LABELS[idea.category] || {};
     const bgGrad = heroGradients[idea.category]   || heroGradients.ROMANTIC;
 
-    // Сюрприз: получатель видит заглушку вместо настоящей карточки
     const isSurpriseForReceiver = invMode === 'incoming' && state?.event?.isSurprise;
     const displayTitle = isSurpriseForReceiver ? SURPRISE_TITLE : idea.title;
-    const cover = isSurpriseForReceiver
-        ? SURPRISE_IMAGE
-        : (idea.photos?.[0]?.url || idea.coverPhotoUrl || null);
 
-    // Дата для модала: planned → из state, иначе сегодня
-    const modalDate  = source === 'planned' ? plannedDate : todayISO();
-    const ctaLabel   = source === 'spontaneous' ? 'Пригласить сейчас 💌' : 'Пригласить партнёра';
+    // Фото: для сюрприза — заглушка, иначе массив из photos[], сортируем по sortOrder
+    const sortedPhotos = isSurpriseForReceiver
+        ? [{ id: 0, url: SURPRISE_IMAGE, sortOrder: 0 }]
+        : (idea.photos?.length > 0
+            ? [...idea.photos].sort((a, b) => a.sortOrder - b.sortOrder)
+            : []);
+
+    const modalDate = source === 'planned' ? plannedDate : todayISO();
+    const ctaLabel  = source === 'spontaneous' ? 'Пригласить сейчас 💌' : 'Пригласить партнёра';
 
     return (
         <div className="idea-detail-page">
 
             <div className="id-scroll">
-                <div className="id-hero" style={!cover ? { background: bgGrad } : {}}>
-                    {cover
-                        ? <img className="id-hero-img" src={cover} alt={idea.title} />
-                        : <div className="id-hero-emoji">{cat.emoji || '💡'}</div>}
-                    <div className="id-hero-gradient" />
-                    <div className="id-hero-title">{displayTitle}</div>
-                    <button className="id-btn-back" onClick={() => navigate(-1)}>
-                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    </button>
-                    <button className={`id-btn-save ${saved ? 'saved' : ''}`} onClick={handleSave}>
-                        <svg viewBox="0 0 24 24">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                    </button>
-                </div>
+                <PhotoHero
+                    photos={sortedPhotos}
+                    bgGrad={bgGrad}
+                    catEmoji={cat.emoji}
+                    title={displayTitle}
+                    saved={saved}
+                    onBack={() => navigate(-1)}
+                    onSave={handleSave}
+                    onPhotoClick={(i) => setLbIndex(i)}
+                />
 
                 <div className="id-content">
-                    <div className="id-drag-handle" />
 
                     <div className="id-tags">
                         {cat.label && <span className="id-tag cat">{cat.emoji} {cat.label}</span>}
@@ -339,24 +491,38 @@ export default function IdeaDetailPage() {
                         {idea.tags?.map(t => <span key={t} className="id-tag">{t}</span>)}
                     </div>
 
-                    {idea.description && <div className="id-description">{idea.description}</div>}
+                    <div className="id-section-label">Описание</div>
+
+                    <div className="id-description">{idea.description}</div>
                     <div className="id-divider" />
 
                     <div className="id-stats">
+                        {/* Рейтинг */}
                         <div className="id-stat-card">
-                            <div className="id-stat-val rating">{idea.rating ? Number(idea.rating).toFixed(1) : '—'}</div>
-                            <div className="id-stat-lbl">Рейтинг</div>
-                            <div className="id-stat-sub">{idea.reviewsCount ? `${idea.reviewsCount} отзывов` : 'нет отзывов'}</div>
+                            <div className="id-stat-val rating">
+                                {idea.rating ? Number(idea.rating).toFixed(1) : '0'}
+                            </div>
+                            <div className="id-stat-lbl">рейтинг</div>
+                            <div className="id-stat-sub">
+                                {idea.reviewsCount ? `${idea.reviewsCount} отзывов` : 'нет отзывов'}
+                            </div>
                         </div>
+
+                        {/* Сохранений */}
                         <div className="id-stat-card">
-                            <div className="id-stat-val saves">{formatSaves(idea.savesCount)}</div>
-                            <div className="id-stat-lbl">Сохранили</div>
-                            <div className="id-stat-sub">пар</div>
+                            <div className="id-stat-val saves">{formatSaves(totalDates)}</div>
+                            <div className="id-stat-lbl">запланированных свиданий</div>
+                            {/*<div className="id-stat-sub">свиданий</div>*/}
                         </div>
+
+                        {/* Остались довольны */}
                         <div className="id-stat-card">
-                            <div className="id-stat-val match">92%</div>
-                            <div className="id-stat-lbl">Подошло</div>
-                            <div className="id-stat-sub">паре</div>
+                            <div className="id-stat-val match">
+                                {ideaStats?.percentPositiveReview != null
+                                    ? `${ideaStats.percentPositiveReview}%`
+                                    : '0%'}
+                            </div>
+                            <div className="id-stat-lbl">остались довольными</div>
                         </div>
                     </div>
 
@@ -374,7 +540,6 @@ export default function IdeaDetailPage() {
                         </>
                     )}
 
-                    {/* ── ОТЗЫВЫ ────────────────────────────────────────── */}
                     {reviews && (
                         <>
                             <div className="id-divider" />
@@ -439,71 +604,40 @@ export default function IdeaDetailPage() {
                         </>
                     )}
 
-                    {/* CTA — зависит от режима */}
-                    {invMode === 'incoming' ? (
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button className="id-cta" style={{ flex: 1 }} onClick={handleAcceptInvite} disabled={sending}>
-                                ✅ Принять
-                            </button>
-                            <button
-                                className="id-cta"
-                                style={{ flex: 1, background: '#EBEBEB', color: '#888' }}
-                                onClick={handleDeclineInvite}
-                                disabled={sending}
-                            >
-                                Отклонить
-                            </button>
-                            <button
-                                style={{
-                                    background: '#EBEBEB', border: '1.5px solid #E5E3E0',
-                                    borderRadius: 18, padding: '0 16px',
-                                    display: 'flex', alignItems: 'center', cursor: 'pointer', flexShrink: 0,
-                                }}
-                                onClick={() => navigate('/chats', { state: { eventId: invEventId } })}
-                            >
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7B1E2E" strokeWidth="2" strokeLinecap="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                                </svg>
-                            </button>
-                        </div>
-                    ) : invMode === 'outgoing' ? (
-                        <>
-                            {/* Пометка для сюрприза — отправитель видит нормальную карточку */}
-                            {state?.event?.isSurprise && (
-                                <div style={{
-                                    background: '#F5F1E8',
-                                    borderRadius: 14,
-                                    padding: '10px 14px',
-                                    fontSize: 12,
-                                    color: '#7A5A1A',
-                                    marginBottom: 10,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                }}>
-                                    🎁 <span>
-                    <strong>{state?.event?.receiverName || 'Партнёр'}</strong> не видит название — для них это сюрприз
-                  </span>
-                                </div>
-                            )}
-                            <button
-                                className="id-cta"
-                                style={{ background: '#EBEBEB', color: '#C0392B', border: '1.5px solid #E5E3E0' }}
-                                onClick={handleCancelInvite}
-                                disabled={sending}
-                            >
-                                {sending ? 'Отменяем…' : '🚫 Отменить приглашение'}
-                            </button>
-                        </>
-                    ) : (
-                        <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                            {sending ? 'Отправляем…' : ctaLabel}
-                        </button>
-                    )}
                 </div>
+            </div>
+
+            {/* ── Прижатая кнопка действия ── */}
+            <div className="id-cta-footer">
+                {invMode === 'incoming' ? (
+                    <div className="id-cta-row">
+                        <button className="id-cta" style={{ flex: 1 }} onClick={handleAcceptInvite} disabled={sending}>✅ Принять</button>
+                        <button className="id-cta" style={{ flex: 1, background: '#EBEBEB', color: '#888' }} onClick={handleDeclineInvite} disabled={sending}>Отклонить</button>
+                        <button className="id-cta-chat" onClick={() => navigate('/chats', { state: { eventId: invEventId } })}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7B1E2E" strokeWidth="2" strokeLinecap="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                ) : invMode === 'outgoing' ? (
+                    <>
+                        {state?.event?.isSurprise && (
+                            <div className="id-surprise-banner">
+                                🎁 <span><strong>{state?.event?.receiverName || 'Партнёр'}</strong> не видит название — для них это сюрприз</span>
+                            </div>
+                        )}
+                        <button className="id-cta" style={{ background: '#EBEBEB', color: '#C0392B', border: '1.5px solid #E5E3E0' }} onClick={handleCancelInvite} disabled={sending}>
+                            {sending ? 'Отменяем…' : '🚫 Отменить приглашение'}
+                        </button>
+                    </>
+                ) : (
+                    <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        {sending ? 'Отправляем…' : ctaLabel}
+                    </button>
+                )}
             </div>
 
             <div className={`id-toast ${toast ? 'show' : ''}`}>{toast}</div>
@@ -515,6 +649,15 @@ export default function IdeaDetailPage() {
                 onSend={handleSend}
                 initialDate={modalDate}
             />
+
+            {/* Лайтбокс */}
+            {lbIndex !== null && sortedPhotos.length > 0 && (
+                <Lightbox
+                    photos={sortedPhotos}
+                    startIndex={lbIndex}
+                    onClose={() => setLbIndex(null)}
+                />
+            )}
         </div>
     );
 }
