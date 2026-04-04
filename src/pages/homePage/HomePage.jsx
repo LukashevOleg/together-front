@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
 import BottomNav from '../../components/layout/BottomNav';
 import IdeaSmallCard from '../../components/ui/IdeaSmallCard';
+import { useIdeaInteraction } from '../../hooks/useIdeaInteraction';
 import api from '../../api/authApi';
 import { getMyProfile } from '../../api/profilerApi';
 import { saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
@@ -20,6 +21,7 @@ const FILTER_CHIPS = [
 export default function HomePage() {
     const { user } = useAuthContext();
     const navigate = useNavigate();
+    const { onLike, onSkip } = useIdeaInteraction();
     const [avatarUrl, setAvatarUrl] = useState(null);
 
     useEffect(() => {
@@ -66,14 +68,16 @@ export default function HomePage() {
 
     const handleToggleSave = async (idea) => {
         const newSaved = !savedMap[idea.id];
-        // Optimistic update
         setSavedMap(prev => ({ ...prev, [idea.id]: newSaved }));
+
+        if (newSaved) onLike(idea.id);
+        else          onSkip(idea.id);
+
         try {
             newSaved
                 ? await saveIdea(Number(idea.id), idea.title, idea.category)
                 : await unsaveIdea(Number(idea.id));
         } catch {
-            // Откат при ошибке
             setSavedMap(prev => ({ ...prev, [idea.id]: !newSaved }));
         }
     };

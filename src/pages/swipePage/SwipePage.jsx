@@ -4,6 +4,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import { getSwipeFeed, recordSwipe } from '../../api/swipesApi';
 import { getMyProfile, getPartner } from '../../api/profilerApi';
 import { categoryGradient } from '../../api/datingApi';
+import { useIdeaInteraction } from '../../hooks/useIdeaInteraction';
 import BottomNav from '../../components/layout/BottomNav';
 import './SwipePage.css';
 
@@ -299,6 +300,7 @@ export default function SwipePage() {
     const [activeMatch,    setActiveMatch]    = useState(null);
     // Локация — показываем шторку
     const [locItem,        setLocItem]        = useState(null);
+    const { onLike, onSkip, onView } = useIdeaInteraction();
 
     // Refs для текущих трёх карточек
     const frontRef = useRef(null);
@@ -342,6 +344,10 @@ export default function SwipePage() {
             }
         });
 
+        if (cards[0]?.ideaId) {
+            onView(cards[0].ideaId);
+        }
+
         return () => { cancelled = true; };
     }, []);
 
@@ -368,6 +374,12 @@ export default function SwipePage() {
     const handleSwipe = useCallback(async (action) => {
         if (cards.length === 0) return;
         const item = cards[0];
+
+        if (action === 'LIKE') {
+            onLike(item.ideaId);
+        } else {
+            onSkip(item.ideaId);
+        }
 
         // Анимация вылета
         const card = frontRef.current;

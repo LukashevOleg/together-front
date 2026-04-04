@@ -50,7 +50,10 @@ export function useIdeaInteraction() {
         const startedAt = viewStartRef.current[ideaId];
         if (!startedAt) return;
 
-        const seconds = Math.round((Date.now() - startedAt) / 1000);
+        const seconds = Math.min(
+            Math.round((Date.now() - startedAt) / 1000),
+            600 // максимум 10 минут за один сеанс
+        );
         delete viewStartRef.current[ideaId];
 
         if (seconds < 3) return; // слишком быстро — не пишем

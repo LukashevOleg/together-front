@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getIdeaById, saveIdea, unsaveIdea, getSaveStatus } from '../../api/ideaApi';
 import { createDateEvent, acceptDateEvent, declineDateEvent, cancelDateEvent } from '../../api/datingApi';
 import { getPartner } from '../../api/profilerApi';
+import { useIdeaInteraction } from '../../hooks/useIdeaInteraction';
 import { getReviews, getIdeaStats } from '../../api/allstatApi';
 import { SURPRISE_IMAGE, SURPRISE_TITLE } from '../../utils/surpriseHelper';
 import BottomNav from '../../components/layout/BottomNav';
@@ -318,6 +319,7 @@ export default function IdeaDetailPage() {
     const { id }    = useParams();
     const navigate  = useNavigate();
     const { state } = useLocation();
+    const { onView, stopView, onLike, onSkip  } = useIdeaInteraction();
 
     const source      = state?.source;
     const plannedDate = state?.date;
@@ -359,12 +361,21 @@ export default function IdeaDetailPage() {
         return () => { cancelled = true; };
     }, [id]);
 
+    useEffect(() => {
+        onView(id);
+        return () => stopView(id); // запишет сколько секунд смотрел при уходе
+    }, [id]);
+
     const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2400); };
 
     const handleSave = async () => {
         if (!idea) return;
         const newSaved = !saved;
         setSaved(newSaved);
+
+        if (newSaved) onLike(Number(id));
+        else          onSkip(Number(id));
+
         try {
             newSaved
                 ? await saveIdea(Number(id), idea.title, idea.category)

@@ -40,7 +40,7 @@ export default function IdeasPage() {
                     <button
                         onClick={() => navigate('/ideas/create')}
                         style={{
-                            background: '#7B1E2E',
+                            background: '#441b1b',
                             color: '#fff',
                             border: 'none',
                             borderRadius: 14,
@@ -63,7 +63,7 @@ export default function IdeasPage() {
                 </div>
                 {/* Город */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#8d8888" strokeWidth="2" strokeLinecap="round">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                         <circle cx="12" cy="9" r="2.5"/>
                     </svg>
@@ -111,7 +111,7 @@ export default function IdeasPage() {
                 <div className="categories-grid">
                     <div
                         className="category-card"
-                        style={{ animationDelay: '0s', gridColumn: '1 / -1' }}
+                        style={{ animationDelay: '0s', gridColumn: '1 / -1' , background: 'radial-gradient(ellipse at 98% 2%, rgb(96, 42, 42) 0%, transparent 65%);'}}
                         onClick={() => navigate(`/ideas/feed${city ? '?city=' + encodeURIComponent(city) : ''}`)}
                     >
                         <div className="category-emoji">🗂️</div>

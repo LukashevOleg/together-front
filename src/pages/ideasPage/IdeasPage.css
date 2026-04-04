@@ -27,11 +27,11 @@
     position: absolute; left: 14px; top: 50%;
     transform: translateY(-50%);
     width: 17px; height: 17px;
-    stroke: var(--text-muted); fill: none; stroke-width: 2;
+    stroke: #441b1b; fill: none; stroke-width: 2;
 }
 .search-input {
     width: 100%;
-    background: var(--white);
+    background: #c5b4b4;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 13px 14px 13px 42px;
@@ -40,49 +40,62 @@
     outline: none;
     transition: border-color 0.2s;
 }
-.search-input::placeholder { color: var(--text-muted); }
-.search-input:focus         { border-color: var(--burgundy); }
+.search-input::placeholder {
+    color: #1A1A1A;
+}
+.search-input:focus {
+    border-color: #441b1b;
+}
 
 .filter-btn {
     width: 46px; height: 46px;
-    background: var(--black);
+    background: #c5b4b4;
     border: none; border-radius: var(--radius-sm);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
 }
-.filter-btn svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; }
+.filter-btn svg { width: 17px; height: 17px; stroke: #441b1b; fill: none; stroke-width: 2; }
 
 .ideas-scroll {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: none;
-    padding: 0 20px 8px;
+    padding: 0 5px 8px;
 }
 .ideas-scroll::-webkit-scrollbar { display: none; }
 
-/* CATEGORIES GRID */
 .categories-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 3px;
 }
 
 .category-card {
-    background: var(--white);
+    /*background: radial-gradient(ellipse at 98% 2%, rgb(96, 42, 42) 0%, transparent 65%);*/
+    border: 6px solid transparent ;
+    background: #492424;
+
+    border-color: #2f1414;
     border-radius: var(--radius);
     padding: 20px 16px;
     cursor: pointer;
-    border: 1.5px solid transparent;
     transition: border-color 0.15s, transform 0.15s;
     animation: fadeSlideUp 0.4s ease both;
 }
+
 .category-card:active {
-    border-color: var(--burgundy);
-    transform: scale(0.98);
+    border-color: #724343;
+    transform: scale(0.08);
 }
 
 .category-emoji { font-size: 36px; margin-bottom: 10px; line-height: 1; }
-.category-label { font-family: 'Cormorant', serif; font-size: 18px; font-weight: 600; color: var(--black); margin-bottom: 4px; }
+.category-label {
+    font-family: 'Cormorant', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+    margin-bottom: 4px;
+}
 .category-count { font-size: 11px; color: var(--text-muted); }
 .category-card[style*="1 / -1"] {
     display: flex;

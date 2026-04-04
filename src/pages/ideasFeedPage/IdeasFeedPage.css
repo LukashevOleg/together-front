@@ -72,5 +72,7 @@
 .drawer-apply { width: 100%; background: var(--burgundy); color: #fff; border: none; border-radius: var(--radius-sm); padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px; }
 
 .filter-btn { position: relative; }
-.filter-btn.active { background: var(--burgundy); }
-.filter-dot { position: absolute; top: 9px; right: 9px; width: 7px; height: 7px; background: #fff; border-radius: 50%; }
+.filter-btn.active {
+    background: #d0c5c5;
+}
+.filter-dot { position: absolute; top: 9px; right: 9px; width: 7px; height: 7px; background: #441b1b; border-radius: 50%; }
