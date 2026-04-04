@@ -35,35 +35,19 @@ export default function IdeasPage() {
         <div className="ideas-page">
 
             <div className="ideas-search-header">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div className="ideas-header-top">
                     <div className="ideas-page-title">Иде<span>и</span></div>
-                    <button
-                        onClick={() => navigate('/ideas/create')}
-                        style={{
-                            background: '#441b1b',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 14,
-                            padding: '8px 16px',
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                    <button className="ideas-create-btn" onClick={() => navigate('/ideas/create')}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="12" y1="5" x2="12" y2="19"/>
                             <line x1="5" y1="12" x2="19" y2="12"/>
                         </svg>
                         Создать
                     </button>
                 </div>
-                {/* Город */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#8d8888" strokeWidth="2" strokeLinecap="round">
+
+                <div className="ideas-city-row">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#8d8888" strokeWidth="2" strokeLinecap="round">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                         <circle cx="12" cy="9" r="2.5"/>
                     </svg>
@@ -74,18 +58,10 @@ export default function IdeasPage() {
                             onChange={e => setCity(e.target.value)}
                             onBlur={() => setEditCity(false)}
                             onKeyDown={e => e.key === 'Enter' && setEditCity(false)}
-                            style={{
-                                border: 'none', borderBottom: '1.5px solid #7B1E2E',
-                                outline: 'none', fontSize: 13, color: '#111',
-                                fontFamily: "'DM Sans', sans-serif",
-                                background: 'transparent', width: 120, padding: '1px 0',
-                            }}
+                            className="city-input"
                         />
                     ) : (
-                        <span
-                            onClick={() => setEditCity(true)}
-                            style={{ fontSize: 13, color: '#555', cursor: 'pointer', borderBottom: '1px dashed #bbb' }}
-                        >
+                        <span className="city-label" onClick={() => setEditCity(true)}>
                             {city || 'Укажите город'}
                         </span>
                     )}
@@ -111,7 +87,7 @@ export default function IdeasPage() {
                 <div className="categories-grid">
                     <div
                         className="category-card"
-                        style={{ animationDelay: '0s', gridColumn: '1 / -1' , background: 'radial-gradient(ellipse at 98% 2%, rgb(96, 42, 42) 0%, transparent 65%);'}}
+                        style={{ animationDelay: '0s', gridColumn: '1 / -1' }}
                         onClick={() => navigate(`/ideas/feed${city ? '?city=' + encodeURIComponent(city) : ''}`)}
                     >
                         <div className="category-emoji">🗂️</div>

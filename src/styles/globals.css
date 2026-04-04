@@ -15,23 +15,31 @@
     --burgundy-light: #F2E8EA;
     --text-muted: #888888;
     --border: #E5E3E0;
-    --radius: 20px;
-    --radius-sm: 14px;
+    --radius: 1.25rem;       /* было 20px — теперь масштабируется */
+    --radius-sm: 0.875rem;   /* было 14px */
 }
 
 html, body {
-    width: 375px;
+    width: 100%;             /* было 375px — главная причина всех проблем */
+    max-width: 430px;        /* ограничение для планшетов/десктопа */
     margin: 0 auto;
     background: #EFEFEF;
     min-height: 100vh;
+    min-height: 100dvh;
     font-family: 'DM Sans', sans-serif;
     color: var(--black);
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    scrollbar-width: none;
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { display: none; }
+
 #root {
-    width: 375px;
+    width: 100%;             /* было 375px */
     min-height: 100vh;
+    min-height: 100dvh;
     background: var(--bg);
     display: flex;
     flex-direction: column;

@@ -23,9 +23,6 @@ const CATEGORY_CHIPS = [
     { key: 'INDOOR',      label: '🏠 Дома' },
 ];
 
-// mode=today  → /api/ideas/today (спонтанный, учитывает погоду)
-// mode=smart  → /api/ideas/smart (персональный)
-// mode=null   → /api/ideas       (обычная лента с фильтрами)
 function getModeLabel(mode) {
     if (mode === 'today') return { title: 'На сегодня', sub: 'С учётом погоды и времени' };
     if (mode === 'smart') return { title: 'Для вас',    sub: 'Персональная подборка' };
@@ -33,11 +30,10 @@ function getModeLabel(mode) {
 }
 
 export default function IdeasFeedPage() {
-    const navigate      = useNavigate();
+    const navigate       = useNavigate();
     const [searchParams] = useSearchParams();
 
-    // mode=today | mode=smart | (пусто = обычная лента)
-    const mode     = searchParams.get('mode');     // 'today' | 'smart' | null
+    const mode     = searchParams.get('mode');
     const initCat  = searchParams.get('category') || null;
     const initCity = searchParams.get('city')     || '';
 
@@ -52,7 +48,6 @@ export default function IdeasFeedPage() {
     const [filtersActive, setFiltersActive] = useState(!!initCat);
 
     const { onView, stopView } = useIdeaInteraction();
-
     const modeLabel = getModeLabel(mode);
 
     const fetchIdeas = useCallback(async (reset = false) => {
@@ -75,7 +70,6 @@ export default function IdeasFeedPage() {
                 data = d;
             }
 
-            // ↓ вот эта строка — data может быть массивом или объектом с .content
             const content = Array.isArray(data) ? data : (data?.content ?? []);
             const isLast  = Array.isArray(data) ? true  : (data?.last ?? true);
 
@@ -91,33 +85,23 @@ export default function IdeasFeedPage() {
         }
     }, [search, sortBy, category, page, mode, initCity]);
 
-    // Сброс при смене фильтров
     useEffect(() => { fetchIdeas(true); }, [sortBy, category]); // eslint-disable-line
-
-    // Debounced поиск
     useEffect(() => {
-        if (mode) return; // в умных режимах поиск не используется
+        if (mode) return;
         const timer = setTimeout(() => fetchIdeas(true), 400);
         return () => clearTimeout(timer);
     }, [search]); // eslint-disable-line
-
-    // Первая загрузка для умных режимов
-    useEffect(() => {
-        if (mode) fetchIdeas(true);
-    }, []); // eslint-disable-line
+    useEffect(() => { if (mode) fetchIdeas(true); }, []); // eslint-disable-line
 
     const handleCardClick = (idea) => {
         stopView(idea.id);
         navigate(`/ideas/${idea.id}`);
     };
 
-    // Заголовок страницы
-    const pageTitle = modeLabel?.title
+    const pageTitle    = modeLabel?.title
         || CATEGORY_CHIPS.find(c => c.key === category)?.label?.replace(/^.+\s/, '')
         || 'Все идеи';
-
-    const pageSubtitle = modeLabel?.sub
-        || `${ideas.length} идей`;
+    const pageSubtitle = modeLabel?.sub || `${ideas.length} идей`;
 
     return (
         <div className="feed-page">
@@ -130,14 +114,11 @@ export default function IdeasFeedPage() {
                         </svg>
                     </button>
                     <div>
-                        <div className="feed-page-title">
-                            {pageTitle}
-                        </div>
+                        <div className="feed-page-title">{pageTitle}</div>
                         <div className="feed-page-subtitle">{pageSubtitle}</div>
                     </div>
                 </div>
 
-                {/* Поиск — только в обычном режиме */}
                 {!mode && (
                     <div className="search-bar-wrap">
                         <div className="search-input-box">
@@ -163,26 +144,13 @@ export default function IdeasFeedPage() {
                     </div>
                 )}
 
-                {/* Бейдж режима для /today и /smart */}
                 {mode && (
-                    <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        background: mode === 'today' ? '#E8F5E9' : '#F2E8EA',
-                        color:      mode === 'today' ? '#2E7D32' : '#7B1E2E',
-                        borderRadius: 20,
-                        padding: '5px 12px',
-                        fontSize: 12,
-                        fontWeight: 500,
-                        marginTop: 6,
-                    }}>
+                    <div className={`mode-badge ${mode}`}>
                         {mode === 'today' ? '🌤 Подобрано по погоде' : '✨ Персональная лента'}
                     </div>
                 )}
             </div>
 
-            {/* Сортировка — только в обычном режиме */}
             {!mode && (
                 <div className="sort-scroll">
                     {SORT_CHIPS.map(chip => (
@@ -197,7 +165,6 @@ export default function IdeasFeedPage() {
                 </div>
             )}
 
-            {/* Список идей */}
             <div className="feed-scroll">
                 <div className="ideas-list">
                     {ideas.map((idea, i) => (
@@ -222,16 +189,12 @@ export default function IdeasFeedPage() {
 
                     {!loading && ideas.length === 0 && (
                         <div className="empty-state">
-                            <div style={{ fontSize: 48 }}>
+                            <div className="empty-emoji">
                                 {mode === 'today' ? '🌧️' : '🔍'}
                             </div>
-                            <p>
-                                {mode === 'today'
-                                    ? 'Сегодня мало подходящих идей'
-                                    : 'Ничего не нашлось'}
-                            </p>
+                            <p>{mode === 'today' ? 'Сегодня мало подходящих идей' : 'Ничего не нашлось'}</p>
                             {mode === 'today' && (
-                                <p style={{ fontSize: 13, color: '#888', textAlign: 'center' }}>
+                                <p className="empty-hint">
                                     Попробуйте режим «Для вас» — там больше вариантов
                                 </p>
                             )}
@@ -240,7 +203,6 @@ export default function IdeasFeedPage() {
                 </div>
             </div>
 
-            {/* Filter drawer — только в обычном режиме */}
             {!mode && (
                 <div
                     className={`filter-overlay ${filterOpen ? 'open' : ''}`}
@@ -249,7 +211,6 @@ export default function IdeasFeedPage() {
                     <div className="filter-drawer" onClick={e => e.stopPropagation()}>
                         <div className="drawer-handle" />
                         <div className="drawer-title">Фильтры</div>
-
                         <div className="filter-group">
                             <div className="filter-group-label">Категория</div>
                             <div className="filter-chips-row">
@@ -264,7 +225,6 @@ export default function IdeasFeedPage() {
                                 ))}
                             </div>
                         </div>
-
                         <button
                             className="drawer-apply"
                             onClick={() => {

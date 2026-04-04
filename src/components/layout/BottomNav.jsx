@@ -39,27 +39,10 @@ export default function BottomNav() {
             <div className={`nav-item ${pathname.startsWith('/swipe') ? 'active' : ''}`} onClick={() => navigate('/swipe')}>
                 <div className="nav-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-                        {/* Задняя карточка — слегка наклонена */}
                         <g transform="rotate(8 15 11)">
-                            <rect
-                                x="7"
-                                y="2"
-                                width="13"
-                                height="15"
-                                rx="2.5"
-                                fill="none"
-                            />
+                            <rect x="7" y="2" width="13" height="15" rx="2.5" fill="none" />
                         </g>
-
-                        {/* Передняя карточка с белой заливкой */}
-                        <rect
-                            x="4"
-                            y="4"
-                            width="13"
-                            height="16"
-                            rx="2.5"
-                            fill="#FFFFFF"
-                        />
+                        <rect x="4" y="4" width="13" height="16" rx="2.5" fill="#FFFFFF" />
                     </svg>
                 </div>
                 <div className="nav-label">Свайпы</div>
@@ -70,16 +53,7 @@ export default function BottomNav() {
                     <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 
                     {totalUnread > 0 && !isChats && (
-                        <span style={{
-                            position: 'absolute',
-                            top: -3, right: -3,
-                            width: 8, height: 8,
-                            borderRadius: '50%',
-                            background: '#7B1E2E',
-                            border: '1.5px solid #fff',
-                            display: 'block',
-                            zIndex: 10,
-                        }} />
+                        <span className="nav-badge" />
                     )}
                 </div>
                 <div className="nav-label">Чаты</div>

@@ -68,7 +68,7 @@ function MatchCard({ match, idea, onClick }) {
                 {/* Цена и длительность снизу */}
                 <div className="mp-card-meta">
                     <span>{formatPrice(price)}</span>
-                    {duration && <span style={{ marginLeft:'auto' }}>⏱ {formatDuration(duration)}</span>}
+                    {duration && <span className="mp-meta-duration">⏱ {formatDuration(duration)}</span>}
                 </div>
             </div>
         </div>
@@ -139,7 +139,7 @@ export default function MatchesPage() {
                         />
                     ))
                 )}
-                <div style={{ height: 16 }} />
+
             </div>
 
             <BottomNav />

@@ -176,7 +176,6 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <div style={{ height: 20 }} />
             </div>
 
             <BottomNav onCreateClick={() => navigate('/ideas/create')} />

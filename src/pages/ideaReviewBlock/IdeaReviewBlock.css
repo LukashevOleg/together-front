@@ -1,116 +1,21 @@
-.irb-root {
-    margin: 16px 0;
-    background: #fff;
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 1px 6px rgba(0,0,0,.05);
-}
-
-.irb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.irb-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
-}
-
-.irb-avg {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.irb-avg-val {
-    font-size: 14px;
-    font-weight: 700;
-    color: #6D1A36;
-}
-
-.irb-avg-count {
-    font-size: 12px;
-    color: #aaa;
-}
-
-.irb-no-rating {
-    font-size: 13px;
-    color: #bbb;
-}
-
-/* Stars */
+.irb-root { margin: clamp(0.75rem,3.5vw,1rem) 0; background: #fff; border-radius: 1rem; padding: clamp(0.75rem,3.5vw,1rem); box-shadow: 0 1px 6px rgba(0,0,0,.05); }
+.irb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(0.5rem,2.5vw,0.75rem); }
+.irb-title { font-size: clamp(0.875rem,4vw,1rem); font-weight: 700; color: #1a1a1a; }
+.irb-avg { display: flex; align-items: center; gap: 0.25rem; }
+.irb-avg-val   { font-size: clamp(0.75rem,3.5vw,0.875rem); font-weight: 700; color: #6D1A36; }
+.irb-avg-count { font-size: clamp(0.65rem,3vw,0.75rem); color: #aaa; }
+.irb-no-rating { font-size: clamp(0.7rem,3vw,0.8125rem); color: #bbb; }
 .irb-stars { display: inline-flex; gap: 1px; }
 .irb-star-on  { color: #6D1A36; }
 .irb-star-off { color: #ddd; }
-
-/* List */
-.irb-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.irb-item {
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f4f4f4;
-}
+.irb-list { display: flex; flex-direction: column; gap: clamp(0.5rem,2.5vw,0.75rem); }
+.irb-item { padding-bottom: clamp(0.5rem,2.5vw,0.75rem); border-bottom: 1px solid #f4f4f4; }
 .irb-item:last-of-type { border-bottom: none; padding-bottom: 0; }
-
-.irb-item-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-
-.irb-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #6D1A36;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    flex-shrink: 0;
-    text-transform: uppercase;
-}
-
-.irb-meta { flex: 1; }
-.irb-name  { font-size: 13px; font-weight: 600; color: #1a1a1a; }
-.irb-date  { font-size: 11px; color: #bbb; }
-
-.irb-comment {
-    font-size: 13px;
-    color: #555;
-    line-height: 1.5;
-    padding-left: 36px;
-}
-
-.irb-empty {
-    font-size: 13px;
-    color: #bbb;
-    text-align: center;
-    padding: 12px 0;
-}
-
-.irb-see-all {
-    width: 100%;
-    background: none;
-    border: 1.5px solid #e8e8e8;
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 14px;
-    color: #6D1A36;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 4px;
-}
+.irb-item-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem; }
+.irb-avatar { width: clamp(1.5rem,7vw,1.75rem); height: clamp(1.5rem,7vw,1.75rem); border-radius: 50%; background: #6D1A36; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: clamp(0.6rem,2.8vw,0.75rem); flex-shrink: 0; text-transform: uppercase; }
+.irb-meta { flex: 1; min-width: 0; }
+.irb-name { font-size: clamp(0.7rem,3vw,0.8125rem); font-weight: 600; color: #1a1a1a; }
+.irb-date { font-size: clamp(0.6rem,2.8vw,0.6875rem); color: #bbb; }
+.irb-comment { font-size: clamp(0.7rem,3vw,0.8125rem); color: #555; line-height: 1.5; padding-left: clamp(1.75rem,8vw,2.25rem); }
+.irb-empty { font-size: clamp(0.7rem,3vw,0.8125rem); color: #bbb; text-align: center; padding: clamp(0.5rem,2.5vw,0.75rem) 0; }
+.irb-see-all { width: 100%; background: none; border: 1.5px solid #e8e8e8; border-radius: 0.625rem; padding: clamp(0.4rem,2vw,0.625rem); font-size: clamp(0.75rem,3.5vw,0.875rem); color: #6D1A36; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 0.25rem; }

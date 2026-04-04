@@ -11,7 +11,6 @@ import CreateIdeaPage from './pages/createIdeaPage/CreateIdeaPage';
 import OnboardingPage  from './pages/onboardingPage/OnboardingPage';
 import ProfilePage     from './pages/profilePage/ProfilePage';
 import LubimkaPage        from './pages/lubimkaPage/LubimkaPage';
-import PartnerProfilePage from './pages/partnerProfilePage/PartnerProfilePage';
 import ChatsPage          from './pages/chatsPage/ChatsPage';
 import AcceptInvitePage   from './pages/acceptInvitePage/AcceptInvitePage';
 import IdeaDetailPage    from './pages/ideaDetailPage/IdeaDetailPage';
@@ -72,7 +71,6 @@ function AppRoutes() {
             <Route path="/invitations"  element={<PrivateRoute><InvitationsPage /></PrivateRoute>} />
             <Route path="/lubimka"      element={<PrivateRoute><LubimkaPage /></PrivateRoute>} />
             <Route path="/history"      element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
-            <Route path="/partner"      element={<PrivateRoute><PartnerProfilePage /></PrivateRoute>} />
             <Route path="/chats"        element={<PrivateRoute><ChatsPage /></PrivateRoute>} />
             <Route path="/reviews/:ideaId" element={<ReviewsPage />} />
 

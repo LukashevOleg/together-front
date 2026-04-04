@@ -115,27 +115,6 @@ export function makePuzzlePath(W, H, edges = {}, cfg = PUZZLE_CFG, hEff) {
     return `path('${parts.join(' ')}')`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TILES — декларативный список, clip генерируется из edges
-//
-// center — позиция центра коннектора как доля длины стороны:
-//   top/bottom  → fraction of W
-//   right/left  → fraction of H (или hEff если задан)
-//
-// Глобальное выравнивание (для справки):
-//   lc0.right tab   global-y = 0   + 71  = 71
-//   rc0.left pocket global-y = 0   + 71  = 71  ✓
-//   lc0.bottom pkt  global-x = 0   + 107 = 107
-//   lc1.top tab     global-x = 0   + 107 = 107 ✓
-//   rc0.bottom tab  global-x = 220 + 77  = 297
-//   rc1.top pocket  global-x = 140 + 157 = 297 ✓
-//   lc1.right pkt   global-y = 127 + 109 = 236
-//   rc1.left tab    global-y = 147 + 89  = 236 ✓
-//   lc1.bottom tab  global-x = 0   + 77  = 77
-//   lc2.top pocket  global-x = 0   + 77  = 77  ✓
-//   lc2.right tab   global-y = 330 + 74  = 404
-//   rc2.left pocket global-y = 310 + 94  = 404 ✓
-// ─────────────────────────────────────────────────────────────────────────────
 const RAW = [
     {   // lc0 — Совпадения
         x:0,   y:0,   w:235, h:142, z:6,
@@ -206,7 +185,7 @@ export const TILES = RAW.map(({ x, y, w, h, z, inner, grad, edges, hEff }) => ({
     inner,
 }));
 
-export function makeHeroPath(W, H, cfg = PUZZLE_CFG) {
+export function makeHeroPath(W, H, cfg) {
     const { depth: D, hst: HST, n: N, n2t: N2T, m: M } = cfg;
 
     const p = v => String(Math.round(v * 10) / 10);

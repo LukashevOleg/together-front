@@ -1,141 +1,58 @@
 .rv-root {
-    min-height: 100vh;
-    background: #f7f7f7;
-    padding-bottom: 40px;
+    min-height: 100dvh; background: #f7f7f7;
+    font-family: 'DM Sans', sans-serif; overflow-x: hidden;
+    padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .rv-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #fff;
-    padding: 14px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    display: flex; align-items: center; gap: clamp(0.5rem, 2.5vw, 0.75rem);
+    background: #fff; padding: clamp(0.6rem, 3vw, 0.875rem) var(--page-px);
+    border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 10;
 }
-
 .rv-back {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #333;
-    padding: 4px;
-    display: flex;
+    background: none; border: none; cursor: pointer; color: #333;
+    padding: 0.25rem; display: flex; flex-shrink: 0;
 }
+.rv-back svg { width: clamp(1.1rem, 5vw, 1.25rem); height: clamp(1.1rem, 5vw, 1.25rem); }
+.rv-header-title { font-size: clamp(0.9rem, 4.3vw, 1.0625rem); font-weight: 700; color: #1a1a1a; }
+.rv-header-sub   { font-size: clamp(0.65rem, 3vw, 0.8125rem); color: #888; }
 
-.rv-header-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #1a1a1a;
-}
-
-.rv-header-sub {
-    font-size: 13px;
-    color: #888;
-}
-
-/* Summary Card */
 .rv-summary-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    display: flex; align-items: center; gap: clamp(0.75rem, 4vw, 1rem);
     background: #fff;
-    margin: 12px 16px;
-    padding: 16px 20px;
-    border-radius: 16px;
-    box-shadow: 0 1px 6px rgba(0,0,0,.06);
+    margin: clamp(0.5rem, 2.5vw, 0.75rem) var(--page-px);
+    padding: clamp(0.75rem, 3.5vw, 1rem) clamp(0.875rem, 4vw, 1.25rem);
+    border-radius: 1rem; box-shadow: 0 1px 6px rgba(0,0,0,.06);
 }
+.rv-summary-rating { font-size: clamp(2rem, 10vw, 2.625rem); font-weight: 800; color: #1a1a1a; line-height: 1; }
+.rv-summary-count  { font-size: clamp(0.65rem, 3vw, 0.8125rem); color: #888; margin-top: 0.125rem; }
 
-.rv-summary-rating {
-    font-size: 42px;
-    font-weight: 800;
-    color: #1a1a1a;
-    line-height: 1;
-}
-
-.rv-summary-count {
-    font-size: 13px;
-    color: #888;
-    margin-top: 2px;
-}
-
-/* Stars */
-.rv-stars-row { display: inline-flex; gap: 2px; }
+.rv-stars-row { display: inline-flex; gap: 0.125rem; }
 .rv-star-on  { color: #6D1A36; }
 .rv-star-off { color: #ddd; }
 
-/* List */
-.rv-list {
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+.rv-list { padding: 0 var(--page-px); display: flex; flex-direction: column; gap: clamp(0.4rem, 2vw, 0.625rem); }
 
-.rv-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 5px rgba(0,0,0,.05);
-}
-
-.rv-card-top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
+.rv-card { background: #fff; border-radius: 0.875rem; padding: clamp(0.6rem, 3vw, 0.875rem) clamp(0.75rem, 3.5vw, 1rem); box-shadow: 0 1px 5px rgba(0,0,0,.05); }
+.rv-card-top { display: flex; align-items: center; gap: clamp(0.4rem, 2vw, 0.625rem); margin-bottom: 0.5rem; }
 
 .rv-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #6D1A36;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    flex-shrink: 0;
-    text-transform: uppercase;
+    width: clamp(1.875rem, 9vw, 2.125rem); height: clamp(1.875rem, 9vw, 2.125rem);
+    border-radius: 50%; background: #6D1A36; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: clamp(0.7rem, 3vw, 0.875rem);
+    flex-shrink: 0; text-transform: uppercase;
 }
+.rv-card-meta { flex: 1; min-width: 0; }
+.rv-author { font-size: clamp(0.75rem, 3.5vw, 0.875rem); font-weight: 600; color: #1a1a1a; }
+.rv-date   { font-size: clamp(0.6rem, 2.8vw, 0.75rem); color: #aaa; }
+.rv-comment { font-size: clamp(0.75rem, 3.5vw, 0.875rem); color: #444; line-height: 1.5; }
 
-.rv-author { font-size: 14px; font-weight: 600; color: #1a1a1a; }
-.rv-date   { font-size: 12px; color: #aaa; }
-
-.rv-card-meta { flex: 1; }
-
-.rv-comment {
-    font-size: 14px;
-    color: #444;
-    line-height: 1.5;
-}
-
-.rv-empty {
-    text-align: center;
-    color: #bbb;
-    padding: 40px 0;
-    font-size: 15px;
-}
-
-.rv-loader {
-    text-align: center;
-    color: #bbb;
-    padding: 16px;
-    font-size: 14px;
-}
-
+.rv-empty  { text-align: center; color: #bbb; padding: clamp(2rem, 12vw, 2.5rem) 0; font-size: clamp(0.8rem, 3.8vw, 0.9375rem); }
+.rv-loader { text-align: center; color: #bbb; padding: 1rem; font-size: clamp(0.75rem, 3.5vw, 0.875rem); }
 .rv-more {
-    width: 100%;
-    padding: 12px;
-    background: none;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 12px;
-    color: #555;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 4px;
+    width: 100%; padding: clamp(0.5rem, 2.5vw, 0.75rem);
+    background: none; border: 1.5px solid #e0e0e0; border-radius: 0.75rem;
+    color: #555; font-size: clamp(0.75rem, 3.5vw, 0.875rem);
+    cursor: pointer; margin-top: 0.25rem;
 }

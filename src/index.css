@@ -1,13 +1,46 @@
+/* ============================================
+   АДАПТИВНАЯ БАЗА
+   320px (маленький Android) → 430px (S24 Ultra)
+   1rem = 12px на ≤322px, ~14px на 375px, 16px на 430px+
+   ============================================ */
+:root {
+  /* 10px на 280px, ~14px на 375px, 16px на 430px+ */
+  font-size: clamp(10px, 3.73vw, 16px);
+
+  /* Горизонтальные отступы — тоже резиновые */
+  --page-px: clamp(0.75rem, 4vw, 1.25rem);
+
+  /* Типовые отступы */
+  --sp-xs:  0.5rem;
+  --sp-sm:  0.75rem;
+  --sp-md:  1rem;
+  --sp-lg:  1.5rem;
+  --sp-xl:  2rem;
+}
+
+/* Глобальная защита от горизонтального переполнения */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { display: none; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  monospace;
 }

@@ -456,7 +456,7 @@ export default function IdeaDetailPage() {
                 <div className="id-not-found-emoji">🔍</div>
                 <div className="id-not-found-title">Идея не найдена</div>
                 <div className="id-not-found-sub">Возможно, она была удалена</div>
-                <button className="id-cta" style={{ marginTop: 16 }} onClick={() => navigate(-1)}>Назад</button>
+                <button className="id-cta" style={{ marginTop: '1rem' }} onClick={() => navigate(-1)}>Назад</button>
             </div>
         </div>
     );
@@ -502,10 +502,42 @@ export default function IdeaDetailPage() {
                         {idea.tags?.map(t => <span key={t} className="id-tag">{t}</span>)}
                     </div>
 
+                    <div className="id-cta-footer">
+                        {invMode === 'incoming' ? (
+                            <div className="id-cta-row">
+                                <button className="id-cta" style={{ flex: 1 }} onClick={handleAcceptInvite} disabled={sending}>✅ Принять</button>
+                                <button className="id-cta decline" style={{ flex: 1 }} onClick={handleDeclineInvite} disabled={sending}>Отклонить</button>
+                                <button className="id-cta-chat" onClick={() => navigate('/chats', { state: { eventId: invEventId } })}>
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7B1E2E" strokeWidth="2" strokeLinecap="round">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        ) : invMode === 'outgoing' ? (
+                            <>
+                                {state?.event?.isSurprise && (
+                                    <div className="id-surprise-banner">
+                                        🎁 <span><strong>{state?.event?.receiverName || 'Партнёр'}</strong> не видит название — для них это сюрприз</span>
+                                    </div>
+                                )}
+                                <button className="id-cta cancel" onClick={handleCancelInvite} disabled={sending}>
+                                    {sending ? 'Отменяем…' : '🚫 Отменить приглашение'}
+                                </button>
+                            </>
+                        ) : (
+                            <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                {sending ? 'Отправляем…' : ctaLabel}
+                            </button>
+                        )}
+                    </div>
+
+
                     <div className="id-section-label">Описание</div>
 
                     <div className="id-description">{idea.description}</div>
-                    <div className="id-divider" />
 
                     <div className="id-stats">
                         {/* Рейтинг */}
@@ -539,7 +571,6 @@ export default function IdeaDetailPage() {
 
                     {(idea.address || idea.location) && (
                         <>
-                            <div className="id-divider" />
                             <div className="id-section-label">Где это</div>
                             <div className="id-location-card">
                                 <div className="id-location-dot" />
@@ -553,7 +584,6 @@ export default function IdeaDetailPage() {
 
                     {reviews && (
                         <>
-                            <div className="id-divider" />
                             <div className="id-reviews-block">
                                 <div className="id-reviews-header">
                                     <span className="id-reviews-title">Отзывы</span>
@@ -561,14 +591,14 @@ export default function IdeaDetailPage() {
                                         <div className="id-reviews-avg">
                                             <span className="id-reviews-stars">
                                                 {[1,2,3,4,5].map(s => (
-                                                    <span key={s} style={{ color: s <= Math.round(reviews.averageRating) ? '#6D1A36' : '#ddd' }}>★</span>
+                                                    <span key={s} className={s <= Math.round(reviews.averageRating) ? 'star-active' : 'star-inactive'}>★</span>
                                                 ))}
                                             </span>
                                             <span className="id-reviews-avg-val">{reviews.averageRating.toFixed(1)}</span>
                                             <span className="id-reviews-avg-count">({reviews.reviewCount})</span>
                                         </div>
                                     ) : (
-                                        <span style={{ fontSize:13, color:'#bbb' }}>Нет оценок</span>
+                                        <span className="id-reviews-no-rating">Нет оценок</span>
                                     )}
                                 </div>
 
@@ -580,9 +610,9 @@ export default function IdeaDetailPage() {
                                                     <div className="id-review-avatar">{(r.authorName || '?')[0]}</div>
                                                     <div className="id-review-meta">
                                                         <div className="id-review-author">{r.authorName || 'Пользователь'}</div>
-                                                        <span style={{ fontSize:12 }}>
+                                                        <span className="id-review-stars">
                                                             {[1,2,3,4,5].map(s => (
-                                                                <span key={s} style={{ color: s <= r.rating ? '#6D1A36' : '#ddd', fontSize:12 }}>★</span>
+                                                                <span key={s} className={s <= r.rating ? 'star-active' : 'star-inactive'}>★</span>
                                                             ))}
                                                         </span>
                                                     </div>
@@ -600,14 +630,14 @@ export default function IdeaDetailPage() {
                                                 onClick={() => navigate(`/reviews/${id}`)}
                                             >
                                                 Смотреть все {reviews.totalElements} отзывов
-                                                <svg viewBox="0 0 24 24" width="14" height="14" style={{ marginLeft:4 }}>
+                                                <svg viewBox="0 0 24 24" width="14" height="14">
                                                     <polyline points="9 18 15 12 9 6" stroke="currentColor" strokeWidth="2" fill="none"/>
                                                 </svg>
                                             </button>
                                         )}
                                     </>
                                 ) : (
-                                    <div style={{ fontSize:13, color:'#bbb', textAlign:'center', padding:'12px 0' }}>
+                                    <div className="id-reviews-empty">
                                         Отзывов пока нет — будьте первым!
                                     </div>
                                 )}
@@ -615,43 +645,11 @@ export default function IdeaDetailPage() {
                         </>
                     )}
 
+
                 </div>
             </div>
 
-            {/* ── Прижатая кнопка действия ── */}
-            <div className="id-cta-footer">
-                {invMode === 'incoming' ? (
-                    <div className="id-cta-row">
-                        <button className="id-cta" style={{ flex: 1 }} onClick={handleAcceptInvite} disabled={sending}>✅ Принять</button>
-                        <button className="id-cta" style={{ flex: 1, background: '#EBEBEB', color: '#888' }} onClick={handleDeclineInvite} disabled={sending}>Отклонить</button>
-                        <button className="id-cta-chat" onClick={() => navigate('/chats', { state: { eventId: invEventId } })}>
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7B1E2E" strokeWidth="2" strokeLinecap="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                            </svg>
-                        </button>
-                    </div>
-                ) : invMode === 'outgoing' ? (
-                    <>
-                        {state?.event?.isSurprise && (
-                            <div className="id-surprise-banner">
-                                🎁 <span><strong>{state?.event?.receiverName || 'Партнёр'}</strong> не видит название — для них это сюрприз</span>
-                            </div>
-                        )}
-                        <button className="id-cta" style={{ background: '#EBEBEB', color: '#C0392B', border: '1.5px solid #E5E3E0' }} onClick={handleCancelInvite} disabled={sending}>
-                            {sending ? 'Отменяем…' : '🚫 Отменить приглашение'}
-                        </button>
-                    </>
-                ) : (
-                    <button className="id-cta" onClick={handleInviteClick} disabled={sending}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                        {sending ? 'Отправляем…' : ctaLabel}
-                    </button>
-                )}
-            </div>
-
-            <div className={`id-toast ${toast ? 'show' : ''}`}>{toast}</div>
+            {/*<div className={`id-toast ${toast ? 'show' : ''}`}>{toast}</div>*/}
             <BottomNav />
 
             <InviteModal

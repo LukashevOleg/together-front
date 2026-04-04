@@ -734,7 +734,6 @@ export default function ChatsPage() {
                         {tabBadge[i] > 0 && <span className="ch-tab-badge">{tabBadge[i]}</span>}
                     </div>
                 ))}
-                <div className="ch-tab-indicator" style={indStyle} />
             </div>
 
             {/* SWIPEABLE TRACK */}
@@ -747,31 +746,31 @@ export default function ChatsPage() {
                 onMouseUp={handleSwipeEnd}
             >
                 {loading ? (
-                    <div style={{ padding: '32px 20px', textAlign: 'center', color: '#888', fontSize: 14 }}>Загружаем…</div>
+                    <div className="ch-loading">Загружаем…</div>
                 ) : (
                     <>
                         {/* TAB 0: Запланированные */}
                         {activeTab === 0 && (
                             acceptedEvents.length === 0
-                                ? <div className="ch-empty"><div style={{fontSize:40}}>📅</div><div className="ch-empty-title">Нет запланированных</div><div className="ch-empty-sub">Как только партнёр примет приглашение — свидание появится здесь</div></div>
+                                ? <div className="ch-empty"><div className="ch-empty-emoji">📅</div><div className="ch-empty-title">Нет запланированных</div><div className="ch-empty-sub">Как только партнёр примет приглашение — свидание появится здесь</div></div>
                                 : acceptedEvents.map(e => renderRow(e))
                         )}
                         {/* TAB 1: Приглашения */}
                         {activeTab === 1 && (
                             pendingEvents.length === 0
-                                ? <div className="ch-empty"><div style={{fontSize:40}}>💌</div><div className="ch-empty-title">Нет активных приглашений</div><div className="ch-empty-sub">Пригласите партнёра на свидание из карточки идеи</div></div>
+                                ? <div className="ch-empty"><div className="ch-empty-emoji">💌</div><div className="ch-empty-title">Нет активных приглашений</div><div className="ch-empty-sub">Пригласите партнёра на свидание из карточки идеи</div></div>
                                 : pendingEvents.map(e => renderRow(e, 'ch-row--pending'))
                         )}
                         {/* TAB 2: Прошедшие */}
                         {activeTab === 2 && (
                             history.length === 0
-                                ? <div className="ch-empty"><div style={{fontSize:40}}>🕐</div><div className="ch-empty-title">Нет прошедших свиданий</div><div className="ch-empty-sub">История свиданий появится здесь</div></div>
+                                ? <div className="ch-empty"><div className="ch-empty-emoji">🕐</div><div className="ch-empty-title">Нет прошедших свиданий</div><div className="ch-empty-sub">История свиданий появится здесь</div></div>
                                 : history.map(e => renderRow(e))
                         )}
                         {/* TAB 3: Не состоявшиеся */}
                         {activeTab === 3 && (
                             cancelledEvents.length === 0
-                                ? <div className="ch-empty"><div style={{fontSize:40}}>🚫</div><div className="ch-empty-title">Нет отменённых</div><div className="ch-empty-sub">Отменённые и отклонённые приглашения появятся здесь</div></div>
+                                ? <div className="ch-empty"><div className="ch-empty-emoji">🚫</div><div className="ch-empty-title">Нет отменённых</div><div className="ch-empty-sub">Отменённые и отклонённые приглашения появятся здесь</div></div>
                                 : cancelledEvents.map(e => renderRow(e))
                         )}
                     </>

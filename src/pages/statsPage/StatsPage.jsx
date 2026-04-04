@@ -65,7 +65,7 @@ export default function StatsPage() {
                     </div>
                 ) : error ? (
                     <div className="stats-empty">
-                        <div style={{ fontSize: 44 }}>😔</div>
+                        <div className="stats-empty-emoji">😔</div>
                         <div className="stats-empty-title">Не удалось загрузить</div>
                         <div className="stats-empty-sub">Проверьте соединение и попробуйте снова</div>
                     </div>
@@ -124,7 +124,7 @@ export default function StatsPage() {
                         {/* Пусто */}
                         {!stats?.timeline?.length && !stats?.topCategories?.length && (
                             <div className="stats-empty">
-                                <div style={{ fontSize: 44 }}>📊</div>
+                                <div className="stats-empty-emoji">📊</div>
                                 <div className="stats-empty-title">Пока нет данных</div>
                                 <div className="stats-empty-sub">
                                     Ходите на свидания — здесь появится ваша история

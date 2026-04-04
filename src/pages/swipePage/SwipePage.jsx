@@ -156,7 +156,7 @@ const SwipeCard = ({ item, posClass, onSwipe, onLocationClick, cardRef, navigate
                         </>
                         : <>
                             <StarsSvg rating={0} />
-                            <span className="sw-rating-count" style={{ marginLeft: 4 }}>Нет оценок</span>
+                            <span className="sw-rating-count" style={{ marginLeft: '0.25rem' }}>Нет оценок</span>
                         </>
                     }
                 </div>
@@ -443,7 +443,7 @@ export default function SwipePage() {
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div className="sw-top-title">Сов<span>падения</span></div>
-                <div style={{ width: 34 }} />
+                <div style={{ width: '2.125rem' }} />
             </div>
 
             {/* CARD STACK */}
