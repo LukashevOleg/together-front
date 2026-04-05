@@ -97,7 +97,7 @@ export default function HomePage() {
             <div className="home-header">
                 <div className="header-left">
                     <div className="greeting">{getGreeting()} 👋</div>
-                    <div className="logo">Вме<span>сте</span></div>
+                    <div className="logo">Вместе</div>
                 </div>
                 <div className="avatar" onClick={() => navigate("/profile")}>
                     {avatarUrl
@@ -124,7 +124,6 @@ export default function HomePage() {
                                 <div className="split-sub">Идеи под погоду и настроение</div>
                             </div>
                             <div className="split-emoji">✨</div>
-                            <div className="split-arrow">→</div>
                         </div>
                         <div className="split-card sb" onClick={() => navigate('/planned')}>
                             <div className="split-left">
@@ -133,7 +132,6 @@ export default function HomePage() {
                                 <div className="split-sub">Дата, время, бронирование</div>
                             </div>
                             <div className="split-emoji">🗓</div>
-                            <div className="split-arrow">→</div>
                         </div>
                     </div>
                 </div>

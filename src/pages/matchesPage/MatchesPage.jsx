@@ -107,7 +107,7 @@ export default function MatchesPage() {
                     <button className="mp-btn-back" onClick={() => navigate('/lubimka')}>
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
-                    <div className="mp-title">Совпа<span>дения</span></div>
+                    <div className="mp-title">Совпадения</div>
                 </div>
                 <div className="mp-sub">Вам с партнёром понравилось</div>
             </div>

@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    background: #EBEBEB;
+    background: var(--bg);
     font-family: 'DM Sans', sans-serif;
     overflow: hidden;
 }
@@ -54,12 +54,12 @@
     display: flex; align-items: center;
     gap: clamp(0.5rem, 2.5vw, 0.75rem);
     padding: clamp(0.6rem, 3vw, 0.8125rem) var(--page-px);
-    background: #fff; border-bottom: 1px solid #E5E3E0;
+    background: var(--white); border-bottom: 1px solid var(--border);
     cursor: pointer; transition: background 0.15s;
     animation: chFadeUp 0.35s ease both;
 }
 .ch-row:first-of-type { border-top: 1px solid #E5E3E0; }
-.ch-row:hover { background: #F8F8F8; }
+.ch-row:hover { background: var(--bg); }
 .ch-row:nth-child(2) { animation-delay: 0.04s; }
 .ch-row:nth-child(3) { animation-delay: 0.08s; }
 .ch-row:nth-child(4) { animation-delay: 0.12s; }
@@ -120,7 +120,7 @@
 
 /* ── Chat screen ─────────────────────────────────────────────────────────── */
 .ch-screen {
-    position: fixed; inset: 0; background: #EBEBEB;
+    position: fixed; inset: 0; background: var(--bg);
     display: flex; flex-direction: column;
     transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94);
@@ -163,8 +163,8 @@
 .ch-messages::-webkit-scrollbar { display: none; }
 
 .ch-sys-msg {
-    background: #fff; border-radius: 0.875rem;
-    padding: 0.75rem 0.875rem; border-left: 3px solid #7B1E2E; margin-bottom: 0.25rem;
+    background: var(--white); border-radius: 0.875rem; border: 0.05rem solid #E5E3E0;
+    padding: 0.75rem 0.875rem; margin-bottom: 0.25rem;
 }
 .ch-sys-label { font-size: clamp(0.55rem, 2.5vw, 0.625rem); font-weight: 500; color: #7B1E2E; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3125rem; }
 .ch-sys-text  { font-size: clamp(0.7rem, 3vw, 0.8125rem); color: #111; line-height: 1.5; }
@@ -185,14 +185,14 @@
     padding: clamp(0.4rem, 2vw, 0.625rem) clamp(0.6rem, 3vw, 0.8125rem);
     font-size: clamp(0.7rem, 3vw, 0.8125rem); line-height: 1.45;
 }
-.ch-bubble.theirs { background: #fff; color: #111; border-bottom-left-radius: 0.25rem; }
-.ch-bubble.mine   { background: #111; color: #fff; border-bottom-right-radius: 0.25rem; }
+.ch-bubble.theirs { background: #813838; color: #fff; border-bottom-left-radius: 0.25rem; }
+.ch-bubble.mine   { background: #805a5a; color: #fff; border-bottom-right-radius: 0.25rem; }
 .ch-b-time { font-size: clamp(0.5rem, 2.3vw, 0.625rem); color: #888; margin-top: 0.1875rem; }
 .ch-bubble-row.mine .ch-b-time { text-align: right; }
 
 /* Input */
 .ch-input-row {
-    padding: 0.625rem 0.875rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.625rem 0.875rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #E5E3E0; background: #fff;
     display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0;
 }
@@ -332,6 +332,6 @@
 .ch-info-action.decline { background: #EBEBEB; color: #888; }
 
 /* ── Misc ────────────────────────────────────────────────────────────────── */
-.ch-row--pending { border-left: 3px solid #7B1E2E; background: #FEFBFB; }
+.ch-row--pending { border-left: 3px solid #7B1E2E; }
 
 @keyframes chFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

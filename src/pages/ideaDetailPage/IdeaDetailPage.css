@@ -155,7 +155,7 @@
 
 /* ══ CONTENT SHEET ═══════════════════════════════════════════════════════ */
 .id-content {
-    background: #fff; border-radius: 1.5rem 1.5rem 0 0;
+    background: var(--bg); border-radius: 1.5rem 1.5rem 0 0;
     margin-top: -1.25rem; position: relative; z-index: 1;
     padding: clamp(1rem, 5vw, 1.25rem) var(--page-px) 2rem;
     animation: idFadeUp 0.35s ease both;
@@ -166,29 +166,29 @@
     margin: 0 auto 1.25rem;
 }
 
-.id-tags { display: flex; flex-wrap: wrap; gap: clamp(0.3rem, 1.5vw, 0.4375rem); margin-bottom: clamp(0.875rem, 4vw, 1.125rem); }
+.id-tags { display: flex; border-color: #622c2c;flex-wrap: wrap; gap: clamp(0.3rem, 1.5vw, 0.4375rem); margin-bottom: clamp(0.875rem, 4vw, 1.125rem); }
 .id-tag {
     border-radius: 1.25rem;
     padding: clamp(0.2rem, 1vw, 0.3125rem) clamp(0.6rem, 3vw, 0.8125rem);
     font-size: clamp(0.65rem, 3vw, 0.75rem); font-weight: 500;
-    border: 1.5px solid #E5E3E0; background: #EBEBEB; color: #111;
+    border: 1.5px solid; background: #EBEBEB; color: #111;
 }
-.id-tag.cat   { background: #F2E8EA; border-color: #F2E8EA; color: #7B1E2E; }
-.id-tag.time  { background: #EEF4EE; border-color: #EEF4EE; color: #3A6B3A; }
-.id-tag.cost  { background: #F5F1E8; border-color: #F5F1E8; color: #7A5A1A; }
-.id-tag.place { background: #EAF0F8; border-color: #EAF0F8; color: #2A5080; }
+.id-tag.cat   { background: #F2E8EA; border-color: #622c2c; color: #7B1E2E; }
+.id-tag.time  { background: #EEF4EE; border-color: #622c2c; color: #3A6B3A; }
+.id-tag.cost  { background: #F5F1E8; border-color: #622c2c; color: #7A5A1A; }
+.id-tag.place { background: #EAF0F8; border-color: #622c2c; color: #2A5080; }
 
 .id-description { font-size: clamp(0.8rem, 3.5vw, 0.875rem); color: #423333; line-height: 1.65; margin-bottom: 1.5rem; }
 .id-divider { height: 1px; background: rgba(72, 37, 37, 0.29); margin: 0 0 1.5rem; }
 
 .id-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(0.35rem, 2vw, 0.5rem); margin-bottom: 1.5rem; }
-.id-stat-card { background: #EBEBEB; border-radius: 1rem; padding: clamp(0.6rem, 3vw, 0.875rem) clamp(0.4rem, 2vw, 0.625rem); text-align: center; }
+.id-stat-card { background: #622c2c; border-radius: 1rem; padding: clamp(0.6rem, 3vw, 0.875rem) clamp(0.4rem, 2vw, 0.625rem); text-align: center; }
 .id-stat-val { font-family: 'Cormorant', serif; font-size: clamp(1.3rem, 6vw, 1.625rem); font-weight: 600; line-height: 1; margin-bottom: 0.25rem; }
-.id-stat-val.rating { color: #7B1E2E; }
-.id-stat-val.saves  { color: #111; }
-.id-stat-val.match  { color: #3A6B3A; }
+.id-stat-val.rating { color: #EAF0F8; }
+.id-stat-val.saves  { color: #EAF0F8; }
+.id-stat-val.match  { color: #EAF0F8; }
 .id-stat-val.empty  { font-size: clamp(1.1rem, 5vw, 1.375rem); line-height: 1.2; }
-.id-stat-lbl { font-size: clamp(0.5rem, 2.3vw, 0.625rem); color: #888; line-height: 1.3; }
+.id-stat-lbl { font-size: clamp(0.5rem, 2.3vw, 0.625rem); color: #EAF0F8; line-height: 1.3; letter-spacing: 0.07rem;}
 .id-stat-sub { font-size: clamp(0.5rem, 2.3vw, 0.625rem); color: #AAAAAA; margin-top: 1px; }
 
 .id-section-label {
@@ -196,7 +196,7 @@
     letter-spacing: 0.07em; margin-bottom: clamp(0.4rem, 2vw, 0.625rem);
 }
 .id-location-card {
-    background: #EBEBEB; border-radius: 1.25rem;
+    background: #eaeaea; border-radius: 1.25rem; border: 0.15rem solid #622c2c;
     padding: clamp(0.6rem, 3vw, 0.875rem) 1rem;
     margin-bottom: 1.75rem; display: flex; align-items: center;
     gap: clamp(0.4rem, 2vw, 0.625rem);
@@ -238,6 +238,7 @@
     font-size: clamp(0.8rem, 3.5vw, 0.9375rem); font-weight: 500;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     gap: clamp(0.4rem, 2vw, 0.625rem); transition: opacity 0.2s;
+    letter-spacing: 0.05rem;
 }
 .id-cta:active { opacity: 0.85; }
 .id-cta svg { width: clamp(1rem, 4.5vw, 1.125rem); height: clamp(1rem, 4.5vw, 1.125rem); fill: none; stroke: #fff; stroke-width: 2; }
@@ -370,7 +371,7 @@
 .id-modal-send svg { width: 1.0625rem; height: 1.0625rem; }
 
 /* ── Reviews ────────────────────────────────────────────────────────────── */
-.id-reviews-block { margin: 0 0 0.25rem; }
+.id-reviews-block { margin: 0 0 0.25rem; margin-bottom: 2rem}
 .id-reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .id-reviews-title  { font-size: clamp(0.875rem, 4vw, 1rem); font-weight: 700; color: #1a1a1a; }
 .id-reviews-avg    { display: flex; align-items: center; gap: 0.25rem; }

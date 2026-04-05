@@ -23,70 +23,41 @@ function StarModal({ event, existingRating, onSubmit, onClose }) {
     };
 
     return (
-        <div onClick={onClose} style={{
-            position:'fixed', inset:0, background:'rgba(0,0,0,.45)',
-            zIndex:500, display:'flex', alignItems:'flex-end', justifyContent:'center',
-        }}>
-            <div onClick={e => e.stopPropagation()} style={{
-                background:'#fff', borderRadius:'20px 20px 0 0',
-                padding:'12px 24px 44px', width:'100%', maxWidth:480,
-                display:'flex', flexDirection:'column', alignItems:'center',
-            }}>
-                {/* Handle */}
-                <div style={{ width:40, height:4, borderRadius:2, background:'#e0e0e0', marginBottom:20 }} />
+        <div className="sm-overlay" onClick={onClose}>
+            <div className="sm-sheet" onClick={e => e.stopPropagation()}>
+                <div className="sm-handle" />
+                <div className="sm-title">Оцените свидание</div>
+                <div className="sm-idea">{event.ideaTitle}</div>
 
-                <div style={{ fontSize:18, fontWeight:700, color:'#111', marginBottom:4 }}>Оцените свидание</div>
-                <div style={{ fontSize:13, color:'#888', marginBottom:20, textAlign:'center' }}>{event.ideaTitle}</div>
-
-                {/* Звёзды бургунди */}
-                <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                <div className="sm-stars">
                     {[1,2,3,4,5].map(s => (
-                        <button key={s}
-                                onClick={() => { setRating(s); setErr(''); }}
-                                onMouseEnter={() => setHovered(s)}
-                                onMouseLeave={() => setHovered(0)}
-                                style={{
-                                    fontSize:46, background:'none', border:'none', cursor:'pointer', padding:0, lineHeight:1,
-                                    color: s <= (hovered || rating) ? '#6D1A36' : '#e0e0e0',
-                                    transform: s <= (hovered || rating) ? 'scale(1.12)' : 'scale(1)',
-                                    transition:'color .12s, transform .12s',
-                                }}
+                        <button
+                            key={s}
+                            className={`sm-star ${s <= (hovered || rating) ? 'active' : ''}`}
+                            onClick={() => { setRating(s); setErr(''); }}
+                            onMouseEnter={() => setHovered(s)}
+                            onMouseLeave={() => setHovered(0)}
                         >★</button>
                     ))}
                 </div>
 
-                <div style={{ fontSize:14, color:'#6D1A36', fontWeight:600, minHeight:22, marginBottom:14 }}>
-                    {LABELS[hovered || rating]}
-                </div>
+                <div className="sm-label">{LABELS[hovered || rating]}</div>
 
                 <textarea
+                    className="sm-textarea"
                     placeholder="Комментарий (необязательно)…"
                     value={comment}
                     onChange={e => setComment(e.target.value)}
                     maxLength={500}
                     rows={3}
-                    style={{
-                        width:'100%', boxSizing:'border-box',
-                        border:'1.5px solid #e8e8e8', borderRadius:12,
-                        padding:12, fontSize:14, fontFamily:'inherit',
-                        resize:'none', outline:'none', marginBottom:8,
-                    }}
-                    onFocus={e => e.target.style.borderColor = '#6D1A36'}
-                    onBlur={e => e.target.style.borderColor = '#e8e8e8'}
                 />
 
-                {err && <div style={{ color:'#e53935', fontSize:13, marginBottom:6 }}>{err}</div>}
+                {err && <div className="sm-error">{err}</div>}
 
-                <button onClick={send} disabled={busy} style={{
-                    width:'100%', padding:14, background:'#6D1A36', color:'#fff',
-                    border:'none', borderRadius:14, fontSize:15, fontWeight:600,
-                    cursor:'pointer', opacity: busy ? .6 : 1, marginTop:4,
-                }}>{busy ? 'Отправляем…' : 'Отправить отзыв'}</button>
-
-                <button onClick={onClose} style={{
-                    background:'none', border:'none', color:'#aaa',
-                    fontSize:14, cursor:'pointer', marginTop:12,
-                }}>Отмена</button>
+                <button className="sm-submit" onClick={send} disabled={busy}>
+                    {busy ? 'Отправляем…' : 'Отправить отзыв'}
+                </button>
+                <button className="sm-cancel" onClick={onClose}>Отмена</button>
             </div>
         </div>
     );
@@ -219,7 +190,7 @@ export default function HistoryPage() {
                 <button className="history-btn-back" onClick={() => navigate('/lubimka')}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="history-title">История <span>свиданий</span></div>
+                <div className="history-title">История свиданий</div>
             </div>
 
             <div className="history-scroll">
@@ -372,15 +343,7 @@ export default function HistoryPage() {
             <BottomNav />
 
             {/* Toast */}
-            {toast && (
-                <div style={{
-                    position:'fixed', bottom:84, left:'50%', transform:'translateX(-50%)',
-                    background:'rgba(26,26,26,.92)', color:'#fff',
-                    borderRadius:20, padding:'10px 20px',
-                    fontSize:14, fontWeight:500, zIndex:600, whiteSpace:'nowrap',
-                    pointerEvents:'none',
-                }}>{toast}</div>
-            )}
+            {toast && <div className="hc-toast">{toast}</div>}
 
             {/* Модал оценки */}
             {modalEvent && (

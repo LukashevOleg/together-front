@@ -183,7 +183,7 @@ export default function LubimkaPage() {
 
                 {/* HEADER */}
                 <div className="lb2-header">
-                    <div className="lb2-title">Люби<span>мка</span></div>
+                    <div className="lb2-title">Любимка</div>
                     <div style={{ position: 'relative' }}>
                         <button className="lb2-dots-btn" onClick={() => setMenuOpen(o => !o)}>
                             <svg width="16" height="16" viewBox="0 0 24 24">

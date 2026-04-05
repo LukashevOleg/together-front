@@ -718,7 +718,7 @@ export default function ChatsPage() {
         <div className="chats-page">
 
             <div className="ch-top-bar">
-                <div className="ch-top-title">Чаты <span>свиданий</span></div>
+                <div className="ch-top-title">Чаты свиданий</div>
             </div>
 
             {/* TAB BAR */}

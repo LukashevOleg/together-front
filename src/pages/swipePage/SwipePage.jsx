@@ -442,7 +442,7 @@ export default function SwipePage() {
                 <button className="sw-btn-back" onClick={() => navigate(-1)}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="sw-top-title">Сов<span>падения</span></div>
+                <div className="sw-top-title">Совпадения</div>
                 <div style={{ width: '2.125rem' }} />
             </div>
 

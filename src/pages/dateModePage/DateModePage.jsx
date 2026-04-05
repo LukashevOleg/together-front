@@ -197,71 +197,38 @@ export default function DateModePage({ mode }) {
                     <button className="dm-btn-back" onClick={() => navigate(-1)}>
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
-                </div>
 
                 {isSpontan ? (
-                    <>
-                        <div className="dm-title">Спонтанное <span>свидание</span></div>
-                        <div className="dm-sub-row">
-                            <div className="dm-now-pill">
-                                <div className="dm-now-dot" />
-                                Прямо сейчас
-                            </div>
-                        </div>
-                    </>
+                    <div className="dm-title">Спонтанное свидание</div>
                 ) : (
-                    <>
-                        <div className="dm-title">
-                            {formatDate(selectedDate)
-                                ? <>{formatDate(selectedDate).split(' ')[0]} <span>{formatDate(selectedDate).split(' ')[1]}</span></>
-                                : <>Запланировать <span>свидание</span></>
-                            }
-                        </div>
-                        <div className="dm-sub-row">
-                            <div className="dm-date-pill">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="5" width="18" height="16" rx="3"/>
-                                    <path d="M3 10h18"/>
-                                    <line x1="8" y1="3" x2="8" y2="7"/>
-                                    <line x1="16" y1="3" x2="16" y2="7"/>
-                                </svg>
-                                {formatWeekday(selectedDate)}
-                                <input
-                                    className="dm-date-input"
-                                    type="date"
-                                    value={selectedDate}
-                                    min={todayISO()}
-                                    onChange={e => setSelectedDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </>
+                    <div className="dm-title">
+                        Запланированное свидание
+                    </div>
                 )}
+                </div>
+
+
             </div>
 
-            {/* HERO CARD
-                ↓ ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ — navigate с ?mode=today / ?mode=smart
-            */}
             <div
                 className="dm-hero"
                 onClick={() => navigate(isSpontan ? '/ideas/feed?mode=today' : '/ideas/feed?mode=smart')}
             >
                 {isSpontan ? (
                     <>
-                        <div className="dm-hero-emoji">✨</div>
-                        <div className="dm-hero-sub">Быстрые идеи, которые можно начать в ближайшие часы</div>
-                        <button
-                            className="dm-hero-btn"
-                            onClick={e => { e.stopPropagation(); navigate('/ideas/feed?mode=today'); }}
-                        >
-                            Идеи на сегодня
-                            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                        </button>
+                        <div className="dm-hero-find">
+                            <div className="dm-hero-find-left">
+                                <div className="dm-hero-find-label">Идеи на сегодня</div>
+                            </div>
+                            <div className="dm-hero-find-arrow">
+                                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                            </div>
+                        </div>
                     </>
                 ) : (
                     <div className="dm-hero-find">
                         <div className="dm-hero-find-left">
-                            <div className="dm-hero-find-label">Найти новые идеи</div>
+                            <div className="dm-hero-find-label">Новые идеи</div>
                         </div>
                         <div className="dm-hero-find-arrow">
                             <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -270,7 +237,6 @@ export default function DateModePage({ mode }) {
                 )}
             </div>
 
-            {/* TAB BAR */}
             <div className="dm-tab-bar" ref={barRef}>
                 {TABS.map((tab, i) => (
                     <div
@@ -288,7 +254,6 @@ export default function DateModePage({ mode }) {
                 <div className="dm-tab-indicator" style={indStyle} />
             </div>
 
-            {/* SWIPEABLE PANES */}
             <div
                 className="dm-swipe-container"
                 onTouchStart={onTouchStart}

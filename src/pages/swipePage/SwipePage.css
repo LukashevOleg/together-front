@@ -1,7 +1,7 @@
 .swipe-page {
     width: 100%;
     height: 100dvh;
-    background: #EBEBEB;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -188,15 +188,18 @@
 
 /* Кнопка */
 .sw-btn-more {
-    width: 100%; background: #EBEBEB; border: 1.5px solid #E5E3E0;
+    width: 100%; background: #602a2a; border: 1.5px solid #441B1BFF;
     border-radius: 0.875rem;
     padding: clamp(0.5rem, 2.5vw, 0.6875rem);
     font-family: 'DM Sans', sans-serif;
-    font-size: clamp(0.7rem, 3vw, 0.8125rem); font-weight: 500; color: #111;
+    font-size: clamp(0.7rem, 3vw, 0.8125rem); font-weight: 500; color: #e0e0e0;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     gap: clamp(0.25rem, 1.5vw, 0.375rem); margin-top: 0.125rem;
 }
-.sw-btn-more svg { width: 0.875rem; height: 0.875rem; stroke: #7B1E2E; fill: none; stroke-width: 2; }
+.sw-btn-more:after {
+    background: radial-gradient(ellipse at 18% 12%, rgb(96, 42, 42) 0%, transparent 75%);
+}
+.sw-btn-more svg { width: 0.875rem; height: 0.875rem; stroke: #d5d5d5; fill: none; stroke-width: 2; }
 
 /* ── Swipe hint ──────────────────────────────────────────────────────────── */
 .sw-hint {

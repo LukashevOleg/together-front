@@ -39,7 +39,6 @@ function EventCard({ event, onChatClick, userId }) {
 
     return (
         <div className={`cal-event-card ${confirmed ? 'confirmed' : ''}`}>
-            <div className="cal-event-accent" />
             <div className="cal-event-img" style={{
                 background: coverUrl ? 'none' : bg,
                 overflow: 'hidden',
@@ -236,9 +235,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="cal-header-row">
                     <div className="cal-month-label">
-                        <span>{MONTH_NAMES[viewDate.month]}</span>
-                        {viewDate.year}
-                        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                        {MONTH_NAMES[viewDate.month]} {viewDate.year}
                     </div>
                     <div className="cal-month-nav">
                         <button className="cal-nav-arrow" onClick={() => shiftMonth(-1)}>
@@ -329,7 +326,7 @@ export default function CalendarPage() {
                 {/* ── LIST VIEW ─────────────────────────────────────────────────── */}
                 {view === 'list' && (
                     <div className="cal-list-wrap">
-                        <div className="cal-list-title">Ближайшие <span>свидания</span></div>
+                        <div className="cal-list-title">Ближайшие свидания</div>
 
                         {loading ? (
                             <div className="cal-no-events">

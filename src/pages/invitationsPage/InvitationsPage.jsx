@@ -96,7 +96,7 @@ export default function InvitationsPage() {
                 <button className="inv-btn-back" onClick={() => navigate('/lubimka')}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="inv-title">Приглаше<span>ния</span></div>
+                <div className="inv-title">Приглашения</div>
             </div>
 
             <div className="inv-tab-bar" ref={barRef}>

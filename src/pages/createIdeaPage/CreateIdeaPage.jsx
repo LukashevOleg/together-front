@@ -172,7 +172,7 @@ export default function CreateIdeaPage() {
                 {step === 0 && (
                     <div className="step-panel active">
                         <div className="step-eyebrow">Шаг 1</div>
-                        <div className="step-heading">Добавьте <span>фото</span></div>
+                        <div className="step-heading">Добавьте фото</div>
                         <div className="step-desc">
                             Перетащите, чтобы изменить порядок — первое фото станет обложкой
                         </div>
@@ -271,7 +271,7 @@ export default function CreateIdeaPage() {
                 {step === 1 && (
                     <div className="step-panel active">
                         <div className="step-eyebrow">Шаг 2</div>
-                        <div className="step-heading">Расскажите об <span>идее</span></div>
+                        <div className="step-heading">Расскажите об идее</div>
                         <div className="step-desc">Название и категория помогут найти вашу идею</div>
                         <div className="field-group">
                             <label className="field-label">Название *</label>
@@ -300,7 +300,7 @@ export default function CreateIdeaPage() {
                 {step === 2 && (
                     <div className="step-panel active">
                         <div className="step-eyebrow">Шаг 3</div>
-                        <div className="step-heading">Детали <span>свидания</span></div>
+                        <div className="step-heading">Детали свидания</div>
                         <div className="step-desc">Укажите цену и время — это поможет с планированием</div>
                         <div className="fields-row">
                             <div className="field-group">
@@ -331,7 +331,7 @@ export default function CreateIdeaPage() {
                 {step === 3 && (
                     <div className="step-panel active">
                         <div className="step-eyebrow">Шаг 4</div>
-                        <div className="step-heading">Добавьте <span>теги</span></div>
+                        <div className="step-heading">Добавьте теги</div>
                         <div className="step-desc">Теги помогут найти идею по настроению</div>
                         <div className="tag-suggestions">
                             {TAG_SUGGESTIONS.map(tag => (

@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
-    background: #EBEBEB;
+    background: var(--bg);
     font-family: 'DM Sans', sans-serif;
     overflow-x: hidden;
 }
@@ -29,8 +29,7 @@
     stroke: #111; fill: none; stroke-width: 2.5; stroke-linecap: round;
 }
 .mp-title {
-    font-family: 'Cormorant', serif;
-    font-size: clamp(1.5rem, 7vw, 1.75rem); font-weight: 600; line-height: 1.1;
+    font-family: 'Cormorant', serif; font-size: clamp(1.4rem,7vw,1.75rem); font-weight: 600; line-height: 1.1;
 }
 .mp-title span { color: #7B1E2E; }
 .mp-sub { font-size: clamp(0.7rem, 3vw, 0.8125rem); color: #888; margin-top: 0.125rem; }
@@ -43,7 +42,7 @@
 
 .mp-card {
     margin: 0 var(--page-px) clamp(0.4rem, 2vw, 0.625rem);
-    background: #fff; border-radius: var(--radius); overflow: hidden;
+    background: var(--white); border-radius: var(--radius); overflow: hidden;
     display: flex; cursor: pointer;
     border: 1.5px solid #F2E8EA;
     animation: mpUp 0.35s ease both; transition: opacity 0.15s;

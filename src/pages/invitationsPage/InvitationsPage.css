@@ -1,6 +1,6 @@
 .inv-page {
     display: flex; flex-direction: column;
-    min-height: 100dvh; background: #EBEBEB;
+    min-height: 100dvh; background: var(--bg);
     font-family: 'DM Sans', sans-serif; overflow-x: hidden;
 }
 .inv-header {
@@ -30,7 +30,7 @@
 
 .inv-card {
     margin: 0 var(--page-px) clamp(0.4rem,2vw,0.625rem);
-    background: #fff; border-radius: var(--radius); overflow: hidden;
+    background: var(--white); border-radius: var(--radius); overflow: hidden;
     display: flex; align-items: center; cursor: pointer;
     border: 1.5px solid #E5E3E0; position: relative;
     animation: invUp 0.3s ease both; transition: opacity 0.15s;

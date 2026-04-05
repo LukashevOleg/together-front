@@ -41,7 +41,6 @@
 .pr-photo-btn span { font-size: clamp(0.65rem, 3vw, 0.75rem); color: #fff; }
 .pr-hero-name-block { position: relative; z-index: 3; }
 .pr-hero-name { font-family: 'Cormorant', serif; font-size: clamp(1.5rem, 7.5vw, 1.875rem); font-weight: 600; color: #fff; line-height: 1; }
-.pr-hero-sub  { font-size: clamp(0.65rem, 3vw, 0.8125rem); color: rgba(255,255,255,0.6); margin-top: 0.25rem; }
 
 /* ── Content ─────────────────────────────────────────────────────────────── */
 .pr-content { padding: clamp(0.875rem, 4vw, 1.25rem) var(--page-px); display: flex; flex-direction: column; gap: clamp(1rem, 5vw, 1.5rem); }

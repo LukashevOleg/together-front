@@ -1,5 +1,5 @@
 .bottom-nav {
-    background: #ffffff;
+    background: #FFFBFBFF;
     border-top: 1px solid #efefef;
     /* fixed вместо sticky — sticky ломается при overflow: hidden на родителе */
     position: fixed;

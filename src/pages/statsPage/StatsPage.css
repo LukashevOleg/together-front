@@ -1,6 +1,6 @@
 .stats-page {
     display: flex; flex-direction: column;
-    min-height: 100dvh; background: #EBEBEB;
+    min-height: 100dvh; background: var(--bg);
     font-family: 'DM Sans', sans-serif; color: #111; overflow-x: hidden;
 }
 
@@ -68,18 +68,23 @@
 
 /* ── Categories ──────────────────────────────────────────────────────── */
 .stats-cats-card {
-    background: #fff; border-radius: var(--radius);
+    background: #441b1b; border-radius: var(--radius);
     border: 1.5px solid #E5E3E0;
     padding: clamp(0.875rem, 4vw, 1.125rem); margin-bottom: clamp(0.4rem, 2vw, 0.625rem);
+    position: relative; overflow: hidden;
 }
-.stats-cats-title { font-family: 'Cormorant', serif; font-size: clamp(1rem, 4.8vw, 1.125rem); font-weight: 600; margin-bottom: clamp(0.6rem, 3vw, 1rem); }
-.stats-cats-title span { color: #7B1E2E; }
+.stats-cats-card:after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 0% 90%, rgb(96,42,42) 0%, transparent 40%);
+    pointer-events: none;
+}
+.stats-cats-title {color: #ffffff; font-family: 'Cormorant', serif; font-size: clamp(1rem, 4.8vw, 1.125rem); font-weight: 600; margin-bottom: clamp(0.6rem, 3vw, 1rem); }
 .stats-cat-row { display: flex; align-items: center; gap: clamp(0.4rem, 2vw, 0.625rem); margin-bottom: clamp(0.5rem, 2.5vw, 0.75rem); }
 .stats-cat-row:last-child { margin-bottom: 0; }
-.stats-cat-name { font-size: clamp(0.65rem, 3vw, 0.8125rem); width: clamp(5rem, 26vw, 6.25rem); flex-shrink: 0; }
-.stats-cat-bar  { flex: 1; height: 6px; background: #EBEBEB; border-radius: 3px; overflow: hidden; }
-.stats-cat-fill { height: 100%; background: #7B1E2E; border-radius: 3px; transition: width 0.6s ease; }
-.stats-cat-pct  { font-size: clamp(0.55rem, 2.5vw, 0.6875rem); color: #888; width: 2rem; text-align: right; flex-shrink: 0; }
+.stats-cat-name {color: #ffffff; font-size: clamp(0.65rem, 3vw, 0.8125rem); width: clamp(5rem, 26vw, 6.25rem); flex-shrink: 0; z-index: 100}
+.stats-cat-bar  { flex: 1; height: 0.3rem; background: #602A2AFF; border-radius: 3px; overflow: hidden; z-index: 100}
+.stats-cat-fill { height: 100%; background: var(--white); border-radius: 3px; transition: width 0.6s ease; z-index: 100;}
+.stats-cat-pct  { font-size: clamp(0.55rem, 2.5vw, 0.6875rem); color: #888; width: 2rem; text-align: right; flex-shrink: 0; z-index: 100}
 
 /* ── Timeline ────────────────────────────────────────────────────────── */
 .stats-timeline { background: #fff; border-radius: var(--radius); border: 1.5px solid #E5E3E0; padding: clamp(0.875rem, 4vw, 1.125rem); }

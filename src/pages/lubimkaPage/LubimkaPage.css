@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
-    background: #EBEBEB;
+    background: var(--bg);
     font-family: 'DM Sans', sans-serif;
     color: #111;
     overflow-x: hidden;
@@ -89,7 +89,7 @@
     overflow: visible;
     position: relative;
     flex-shrink: 0;
-    background: #EBEBEB;
+    background: var(--bg);
     z-index: 10;
     /* margin-top задаётся инлайн из JSX = -depth*scale, чтобы паззл
        заходил под зубья hero ровно на глубину зуба */
@@ -101,7 +101,7 @@
     width: 375px;
     height: 503px;
     flex-shrink: 0;
-    background: #EBEBEB;
+    background: var(--bg);
     margin-top: 1px;
     overflow: visible;
 }

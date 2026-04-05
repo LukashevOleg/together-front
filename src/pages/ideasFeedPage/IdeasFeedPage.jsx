@@ -122,7 +122,10 @@ export default function IdeasFeedPage() {
                 {!mode && (
                     <div className="search-bar-wrap">
                         <div className="search-input-box">
-                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#441b1b" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35" strokeLinecap="round"/>
+                            </svg>
                             <input
                                 className="search-input"
                                 placeholder="Поиск…"
@@ -134,7 +137,7 @@ export default function IdeasFeedPage() {
                             className={`filter-btn ${filtersActive ? 'active' : ''}`}
                             onClick={() => setFilterOpen(true)}
                         >
-                            <svg viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#441b1b" strokeWidth="2" strokeLinecap="round">
                                 <line x1="4"  y1="6"  x2="20" y2="6"/>
                                 <line x1="8"  y1="12" x2="16" y2="12"/>
                                 <line x1="11" y1="18" x2="13" y2="18"/>
@@ -144,11 +147,6 @@ export default function IdeasFeedPage() {
                     </div>
                 )}
 
-                {mode && (
-                    <div className={`mode-badge ${mode}`}>
-                        {mode === 'today' ? '🌤 Подобрано по погоде' : '✨ Персональная лента'}
-                    </div>
-                )}
             </div>
 
             {!mode && (

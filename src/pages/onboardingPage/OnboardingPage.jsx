@@ -144,7 +144,7 @@ export default function OnboardingPage() {
                     <div className="ob-screen active">
                         <div className="ob-done-screen">
                             <div className="ob-done-emoji">💝</div>
-                            <div className="ob-done-title">Всё <span>готово!</span></div>
+                            <div className="ob-done-title">Всё готово!</div>
                             <div className="ob-done-sub">
                                 Добро пожаловать, {name || 'друг'}!<br/>
                                 Теперь начните свайпать идеи вместе с половинкой
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                 {/* STEP 0 — NAME */}
                 <div className={`ob-screen ${step === 0 ? 'active' : step > 0 ? 'left' : 'right'}`}>
                     <div className="ob-emoji">👋</div>
-                    <div className="ob-title">Как вас<br/><span>зовут?</span></div>
+                    <div className="ob-title">Как вас<br/>зовут?</div>
                     <div className="ob-sub">Это имя увидит ваша половинка</div>
                     <div className="ob-field-label">Ваше имя</div>
                     <input
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
                 {/* STEP 1 — AGE */}
                 <div className={`ob-screen ${step === 1 ? 'active' : step > 1 ? 'left' : 'right'}`}>
                     <div className="ob-emoji">🎂</div>
-                    <div className="ob-title">Сколько<br/>вам <span>лет?</span></div>
+                    <div className="ob-title">Сколько<br/>вам лет?</div>
                     <div className="ob-sub">Поможет подобрать идеи, которые вам подойдут</div>
                     <div className="ob-age-picker">
                         <button className="ob-age-btn" onClick={() => setAge(a => Math.max(16, a - 1))}>
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                 {/* STEP 2 — INTERESTS */}
                 <div className={`ob-screen ${step === 2 ? 'active' : step > 2 ? 'left' : 'right'}`}>
                     <div className="ob-emoji">✨</div>
-                    <div className="ob-title">Что вам<br/><span>нравится?</span></div>
+                    <div className="ob-title">Что вам<br/>нравится?</div>
                     <div className="ob-sub">Выберите хотя бы 2 — мы подберём подходящие идеи</div>
                     <div className="ob-interests-grid">
                         {INTERESTS.map(item => (
@@ -270,7 +270,7 @@ export default function OnboardingPage() {
                         ))}
                     </div>
                     <div className="ob-interests-hint">
-                        Выбрано: <span>{interests.size}</span> из {INTERESTS.length}
+                        Выбрано: {interests.size} из {INTERESTS.length}
                     </div>
                     <button
                         className={`ob-btn-next ${canProceed() ? 'ready' : ''}`}
@@ -286,7 +286,7 @@ export default function OnboardingPage() {
                 {/* STEP 3 — CITY */}
                 <div className={`ob-screen ${step === 3 ? 'active' : step > 3 ? 'left' : 'right'}`}>
                     <div className="ob-emoji">🏙</div>
-                    <div className="ob-title">Ваш<br/><span>город?</span></div>
+                    <div className="ob-title">Ваш<br/>город?</div>
                     <div className="ob-sub">Покажем идеи и места рядом с вами</div>
 
                     <div className="ob-city-wrap">
@@ -396,7 +396,7 @@ export default function OnboardingPage() {
                 {/* STEP 4 — PARTNER */}
                 <div className={`ob-screen ${step === 4 ? 'active' : step > 4 ? 'left' : 'right'}`}>
                     <div className="ob-emoji">💌</div>
-                    <div className="ob-title">Добавьте<br/><span>половинку</span></div>
+                    <div className="ob-title">Добавьте<br/>половинку</div>
                     <div className="ob-sub">Как удобнее пригласить партнёра?</div>
 
                     <div className="ob-partner-options">

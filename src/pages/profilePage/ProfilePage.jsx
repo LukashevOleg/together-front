@@ -191,7 +191,6 @@ export default function ProfilePage() {
                     <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={onPhotoChange} />
                     <div className="pr-hero-name-block">
                         <div className="pr-hero-name">{profile?.name || '—'}</div>
-                        <div className="pr-hero-sub">{heroSub || 'Заполните профиль'}</div>
                     </div>
                 </div>
 
@@ -297,7 +296,7 @@ export default function ProfilePage() {
             {/* ── INTERESTS SHEET ─────────────────────────────────────────────── */}
             <div className={`pr-sheet ${intSheet ? 'open' : ''}`}>
                 <div className="pr-sheet-handle" />
-                <div className="pr-sheet-title">Ваши <span>увлечения</span></div>
+                <div className="pr-sheet-title">Ваши увлечения</div>
                 <div className="pr-sheet-body">
                     <div className="pr-int-search-wrap">
                         <div className="pr-int-search-icon">

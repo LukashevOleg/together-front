@@ -36,7 +36,7 @@ function PhoneScreen({ onSubmit, loading, error }) {
 
             <div className="hero">
                 <div className="hero-logo">💝</div>
-                <div className="hero-title">Вме<span>сте</span></div>
+                <div className="hero-title">Вместе</div>
                 <div className="hero-sub">Идеи для свиданий, которые понравятся вам обоим</div>
             </div>
 
@@ -130,7 +130,7 @@ function SmsScreen({ phoneNumber, onSubmit, onBack, onResend, loading, error, tt
 
             <div className="hero" style={{ paddingTop: 20, paddingBottom: 20 }}>
                 <div className="hero-logo" style={{ fontSize: 48, marginBottom: 12 }}>📲</div>
-                <div className="hero-title" style={{ fontSize: 26, marginBottom: 6 }}>Введите <span>код</span></div>
+                <div className="hero-title" style={{ fontSize: 26, marginBottom: 6 }}>Введите код</div>
                 <div className="hero-sub">
                     Код отправлен на номер<br/>
                     <strong>{displayPhone}</strong>

@@ -2,7 +2,6 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    min-height: 100dvh;
     background: var(--bg);
     overflow-x: hidden;               /* можно вернуть: нав теперь position:fixed */
 }
@@ -178,11 +177,11 @@
     line-height: 1.3;
 }
 .split-emoji {
-    font-size: clamp(2.5rem, 13vw, 5rem);    /* уменьшили мин: больше места тексту */
+    font-size: clamp(2.5rem, 11vh, 5rem);
     z-index: 1;
     line-height: 1;
     flex-shrink: 0;
-    margin-left: 0.5rem;                      /* отступ от текста */
+    margin-left: 0.5rem;
     filter: drop-shadow(0 0 18px rgba(255,255,180,0.45));
 }
 .split-arrow {

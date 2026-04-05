@@ -52,7 +52,7 @@ export default function StatsPage() {
                 <button className="stats-btn-back" onClick={() => navigate('/lubimka')}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="stats-title">Статис<span>тика</span></div>
+                <div className="stats-title">Статистика</div>
             </div>
 
             {/* CONTENT */}
@@ -102,7 +102,7 @@ export default function StatsPage() {
                         {stats?.topCategories?.length > 0 && (
                             <div className="stats-cats-card">
                                 <div className="stats-cats-title">
-                                    Любимые <span>категории</span>
+                                    Любимые категории
                                 </div>
                                 {stats.topCategories.map(cat => (
                                     <div key={cat.key} className="stats-cat-row">

@@ -207,7 +207,7 @@ export default function HistoryPage() {
                 <button className="history-btn-back" onClick={() => navigate('/lubimka')}>
                     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <div className="history-title">История <span>свиданий</span></div>
+                <div className="history-title">История свиданий</div>
             </div>
 
             <div className="history-scroll">
